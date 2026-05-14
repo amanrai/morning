@@ -39,6 +39,7 @@ function cleanArticleHtml(html = '') {
     .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
     .replace(/<form[\s\S]*?<\/form>/gi, '')
     .replace(/<button[\s\S]*?<\/button>/gi, '')
+    .replace(/<nav[\s\S]*?<\/nav>/gi, '')
 }
 
 function textParagraphs(text = '') {
