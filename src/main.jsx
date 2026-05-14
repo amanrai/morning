@@ -32,48 +32,19 @@ function ArticleCard({ article, active, onOpen, onSave }) {
   )
 }
 
-function decodeHtml(input = '') {
-  const textarea = document.createElement('textarea')
-  textarea.innerHTML = input
-  return textarea.value
-}
-
-function articleBlocks(article) {
-  const html = article.html_content || ''
-  const blocks = []
-
-  if (html) {
-    const matches = html.matchAll(/<(p|h2|h3|blockquote)\b[^>]*>([\s\S]*?)<\/\1>/gi)
-    for (const match of matches) {
-      const tag = match[1].toLowerCase()
-      let text = match[2]
-        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-      text = decodeHtml(text)
-      if (!text) continue
-      if (/AI Narration|Listen to /.test(text)) continue
-      if (/^(close|share|subscribe|advertisement)$/i.test(text)) continue
-      blocks.push({ tag, text })
-    }
-  }
-
-  const paragraphChars = blocks.filter(b => b.tag === 'p').reduce((n, b) => n + b.text.length, 0)
-  if (paragraphChars > 800) return blocks
-
+function articleHtml(article) {
+  if (article.html_content) return article.html_content
   return (article.text_content || '')
-    .replace(/([.!?][”’"]?)\s+(?=[A-Z“])/g, '$1\n\n')
+    .replace(/([.!?][\"''']?)\s+(?=[A-Z"])/g, '$1\n\n')
     .split(/\n{2,}/)
     .map(s => s.trim())
     .filter(Boolean)
-    .map(text => ({ tag: 'p', text }))
+    .map(text => '<p>' + text + '</p>')
+    .join('\n')
 }
 
 const Reader = React.forwardRef(function Reader({ article, onToggleLibrary, onPatch, scrolled, onScroll, fontScale, onFontScale }, ref) {
   if (!article) return <section ref={ref} onScroll={onScroll} className="reader empty"><Sparkles/><p>Loading article…</p></section>
-  const blocks = articleBlocks(article)
   return (
     <section ref={ref} onScroll={onScroll} className="reader">
       <div className="reader-actions">
@@ -93,14 +64,7 @@ const Reader = React.forwardRef(function Reader({ article, onToggleLibrary, onPa
         {article.byline && <p className="byline">{article.byline}</p>}
         {article.excerpt && <p className="dek">{article.excerpt}</p>}
       </header>
-      <div className="prose" style={{ '--reader-font-scale': fontScale }}>
-        {blocks.map((block, i) => {
-          if (block.tag === 'h2') return <h2 key={i}>{block.text}</h2>
-          if (block.tag === 'h3') return <h3 key={i}>{block.text}</h3>
-          if (block.tag === 'blockquote') return <blockquote key={i}>{block.text}</blockquote>
-          return <p key={i}>{block.text}</p>
-        })}
-      </div>
+      <div className="prose" style={{ '--reader-font-scale': fontScale }} dangerouslySetInnerHTML={{ __html: articleHtml(article) }} />
     </section>
   )
 })
