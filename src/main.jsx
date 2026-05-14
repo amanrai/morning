@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Archive, Bookmark, BookmarkCheck, ExternalLink, Menu, RefreshCw, Search, Sparkles } from 'lucide-react'
+import { Archive, Bookmark, BookmarkCheck, ExternalLink, Menu, Moon, RefreshCw, Search, Sparkles, Sun } from 'lucide-react'
 import { discover, fetchQueued, getArticle, health, listArticles, updateArticle } from './lib/api.js'
 import './styles.css'
 
@@ -43,7 +43,7 @@ function articleHtml(article) {
     .join('\n')
 }
 
-const Reader = React.forwardRef(function Reader({ article, onToggleLibrary, onPatch, scrolled, onScroll, fontScale, onFontScale }, ref) {
+const Reader = React.forwardRef(function Reader({ article, onToggleLibrary, onPatch, scrolled, onScroll, fontScale, onFontScale, theme, onToggleTheme }, ref) {
   if (!article) return <section ref={ref} onScroll={onScroll} className="reader empty"><Sparkles/><p>Loading article…</p></section>
   return (
     <section ref={ref} onScroll={onScroll} className="reader">
@@ -56,6 +56,7 @@ const Reader = React.forwardRef(function Reader({ article, onToggleLibrary, onPa
           <Button variant="ghost" className="reader-icon-btn font-btn" onClick={() => onFontScale(1)} aria-label="Increase font size" title="Increase font size">A+</Button>
           <Button variant="ghost" className="reader-icon-btn" onClick={() => onPatch({ archived: true })} aria-label="Archive article" title="Archive"><Archive size={14}/></Button>
           <a className="btn btn-ghost reader-icon-btn" href={article.url} target="_blank" rel="noreferrer" aria-label="Open original" title="Original"><ExternalLink size={14}/></a>
+          <Button variant="ghost" className="reader-icon-btn" onClick={onToggleTheme} aria-label="Toggle dark mode" title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>{theme === 'dark' ? <Sun size={14}/> : <Moon size={14}/>}</Button>
         </div>
       </div>
       <header className="reader-head">
@@ -83,7 +84,17 @@ function App() {
     return saved > 0 && Number.isFinite(saved) ? saved : 1
   })
   const [libraryCollapsed, setLibraryCollapsed] = useState(false)
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('morning.theme')
+    if (saved) return saved
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  })
   const readerRef = useRef(null)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem('morning.theme', theme)
+  }, [theme])
 
   const selectedInList = useMemo(() => articles.find(a => a.id === selectedId), [articles, selectedId])
   const currentArticle = selected?.id === selectedId ? selected : null
@@ -210,6 +221,8 @@ function App() {
         onFontScale={(delta) => setFontScale(v => Math.max(0.85, Math.min(1.3, Number((v + delta * 0.05).toFixed(2)))))}
         onToggleLibrary={toggleLibrary}
         onPatch={patchSelected}
+        theme={theme}
+        onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
       />
     </main>
   )
