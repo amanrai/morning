@@ -98,7 +98,10 @@ app.get('/api/runs', (_req, res) => {
 
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static('dist'))
-  app.get('*', (_req, res) => res.sendFile('index.html', { root: 'dist' }))
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) return next()
+    res.sendFile('index.html', { root: 'dist' })
+  })
 }
 
 app.listen(port, '0.0.0.0', () => {
