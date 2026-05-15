@@ -9,8 +9,10 @@ function cx(...xs) { return xs.filter(Boolean).join(' ') }
 
 function timeAgo(dateStr) {
   if (!dateStr) return null
-  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000)
-  if (days < 1) return 'today'
+  const ms = Date.now() - new Date(dateStr).getTime()
+  const hours = Math.floor(ms / 3600000)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(ms / 86400000)
   if (days === 1) return '1 day ago'
   if (days < 7) return `${days} days ago`
   const weeks = Math.floor(days / 7)
