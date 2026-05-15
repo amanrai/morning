@@ -403,7 +403,7 @@ function App() {
   const toggleSidebar = () => setSidebarCollapsed(v => !v)
 
   return (
-    <main className={cx('app-shell', sidebarCollapsed && 'sidebar-collapsed')}>
+    <main className={cx('app-shell', sidebarCollapsed && 'sidebar-collapsed', selectedId && 'article-open')}>
       <Sidebar
         active={selectedId ? null : activePanel}
         onSelect={selectPanel}
