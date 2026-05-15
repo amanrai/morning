@@ -49,7 +49,7 @@ function articleHtml(article) {
 }
 
 const Reader = React.forwardRef(function Reader({ article, onToggleLibrary, onPatch, scrolled, onScroll, fontScale, onFontScale, theme, onToggleTheme }, ref) {
-  if (!article) return <section ref={ref} onScroll={onScroll} className="reader empty"><Sparkles/><p>Loading article…</p></section>
+  if (!article) return <section ref={ref} onScroll={onScroll} className="reader empty"><Sparkles/><p>Select something worth your attention.</p></section>
   return (
     <section ref={ref} onScroll={onScroll} className="reader">
       <div className="reader-actions">
@@ -106,10 +106,14 @@ function App() {
   async function refresh() {
     const { articles } = await listArticles({ q: query, status: 'ready', sort, min_words: minWords })
     setArticles(articles)
-    if (!selectedId && articles[0]) setSelectedId(articles[0].id)
   }
 
-  useEffect(() => { refresh().catch(console.error) }, [query, sort, minWords])
+  useEffect(() => {
+    setSelectedId(null)
+    setSelected(null)
+    setReaderScrolled(false)
+    refresh().catch(console.error)
+  }, [query, sort, minWords])
   useEffect(() => { localStorage.setItem('morning.fontScale', String(fontScale)) }, [fontScale])
   useEffect(() => {
     if (!selectedId) return
