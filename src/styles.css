@@ -375,14 +375,13 @@ button { cursor: pointer; }
   display: none;
   position: fixed;
   inset: 0;
-  background: hsl(var(--foreground) / .3);
+  background: transparent;
   z-index: 190;
-  opacity: 0;
   pointer-events: none;
-  transition: opacity .22s ease;
+  transition: background .22s ease;
 }
 .mobile-nav-backdrop.is-open {
-  opacity: 1;
+  background: hsl(var(--foreground) / .3);
   pointer-events: auto;
 }
 
