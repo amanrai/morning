@@ -82,14 +82,23 @@ function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle, 
   )
 }
 
-function CardList({ articles, selectedId, onOpen, onSave, emptyMessage }) {
+function CardList({ articles, selectedId, onOpen, onSave, emptyMessage, hasMore, onLoadMore, loadingMore }) {
   if (!articles.length) return <div className="empty-list">{emptyMessage ?? 'No ready essays yet.'}</div>
   return (
-    <div className="cards">
-      {articles.map(a => (
-        <ArticleCard key={a.id} article={a} active={a.id === selectedId} onOpen={onOpen} onSave={onSave} />
-      ))}
-    </div>
+    <>
+      <div className="cards">
+        {articles.map(a => (
+          <ArticleCard key={a.id} article={a} active={a.id === selectedId} onOpen={onOpen} onSave={onSave} />
+        ))}
+      </div>
+      {hasMore && (
+        <div className="load-more-row">
+          <button className="load-more-btn" onClick={onLoadMore} disabled={loadingMore}>
+            {loadingMore ? 'Loading…' : 'Load more'}
+          </button>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -161,7 +170,7 @@ function CarouselPanel({ articles, onOpen, interval }) {
   )
 }
 
-function HomePanel({ articles, selectedId, sort, onSort, minWords, onMinWords, onOpen, onSave }) {
+function HomePanel({ articles, selectedId, sort, onSort, minWords, onMinWords, onOpen, onSave, hasMore, onLoadMore, loadingMore }) {
   const [localMinWords, setLocalMinWords] = useState(minWords)
   return (
     <aside className="panel">
@@ -191,12 +200,12 @@ function HomePanel({ articles, selectedId, sort, onSort, minWords, onMinWords, o
           />
         </div>
       </div>
-      <CardList articles={articles} selectedId={selectedId} onOpen={onOpen} onSave={onSave} />
+      <CardList articles={articles} selectedId={selectedId} onOpen={onOpen} onSave={onSave} hasMore={hasMore} onLoadMore={onLoadMore} loadingMore={loadingMore} />
     </aside>
   )
 }
 
-function SearchPanel({ articles, selectedId, query, onQuery, onOpen, onSave }) {
+function SearchPanel({ articles, selectedId, query, onQuery, onOpen, onSave, hasMore, onLoadMore, loadingMore }) {
   return (
     <aside className="panel">
       <div className="panel-search-bar">
@@ -207,7 +216,7 @@ function SearchPanel({ articles, selectedId, query, onQuery, onOpen, onSave }) {
         </label>
       </div>
       {query
-        ? <CardList articles={articles} selectedId={selectedId} onOpen={onOpen} onSave={onSave} emptyMessage={`No results for "${query}"`} />
+        ? <CardList articles={articles} selectedId={selectedId} onOpen={onOpen} onSave={onSave} emptyMessage={`No results for "${query}"`} hasMore={hasMore} onLoadMore={onLoadMore} loadingMore={loadingMore} />
         : <p className="panel-hint">Start typing to search.</p>
       }
     </aside>
@@ -295,6 +304,9 @@ function App() {
     const saved = Number(localStorage.getItem('morning.carouselMinWords') ?? '')
     return Number.isFinite(saved) && saved > 0 ? saved : 1500
   })
+  const [offset, setOffset] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [readerScrolled, setReaderScrolled] = useState(false)
   const [fontScale, setFontScale] = useState(() => {
     const saved = Number(localStorage.getItem('morning.fontScale') ?? '')
@@ -347,9 +359,25 @@ function App() {
 
   const currentArticle = selected?.id === selectedId ? selected : null
 
+  const LIMIT = 100
+
   async function refresh() {
-    const { articles } = await listArticles({ q: query, status: 'ready', sort, min_words: minWords })
-    setArticles(articles)
+    const { articles: fetched } = await listArticles({ q: query, status: 'ready', sort: query ? 'published' : sort, min_words: minWords, limit: LIMIT, offset: 0 })
+    setArticles(fetched)
+    setOffset(LIMIT)
+    setHasMore(fetched.length === LIMIT)
+  }
+
+  async function loadMore() {
+    setLoadingMore(true)
+    try {
+      const { articles: fetched } = await listArticles({ q: query, status: 'ready', sort: query ? 'published' : sort, min_words: minWords, limit: LIMIT, offset })
+      setArticles(prev => [...prev, ...fetched])
+      setOffset(o => o + LIMIT)
+      setHasMore(fetched.length === LIMIT)
+    } finally {
+      setLoadingMore(false)
+    }
   }
 
   useEffect(() => {
@@ -427,7 +455,7 @@ function App() {
     setFontScale(v => Math.max(0.85, Math.min(1.3, Number((v + delta * 0.05).toFixed(2)))))
   }
 
-  const sharedCardProps = { articles, selectedId, onOpen: selectArticle, onSave: toggleSave }
+  const sharedCardProps = { articles, selectedId, onOpen: selectArticle, onSave: toggleSave, hasMore, onLoadMore: loadMore, loadingMore }
   const toggleSidebar = () => setSidebarCollapsed(v => !v)
 
   return (
