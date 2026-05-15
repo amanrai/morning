@@ -33,7 +33,12 @@ function ArticleCard({ article, active, onOpen, onSave }) {
 }
 
 function articleHtml(article) {
-  if (article.html_content) return article.html_content
+  if (article.html_content) {
+    return article.html_content
+      .replace(/<a\b(?![^>]*\btarget=)/gi, '<a target="_blank" rel="noreferrer"')
+      .replace(/<a\b([^>]*?)\btarget=(['"])[^'"]*\2/gi, '<a$1target="_blank"')
+      .replace(/<a\b(?![^>]*\brel=)([^>]*)>/gi, '<a rel="noreferrer"$1>')
+  }
   return (article.text_content || '')
     .replace(/([.!?][\"''']?)\s+(?=[A-Z"])/g, '$1\n\n')
     .split(/\n{2,}/)
