@@ -140,7 +140,7 @@ function App() {
       <aside className={cx('library', selected && 'has-selection', libraryCollapsed && 'collapsed')}>
         <header className="masthead">
           <div className="masthead-copy">
-            <p className="eyebrow">Afternoon</p>
+            <p className="eyebrow">Morning</p>
           </div>
         </header>
         <section className="library-controls">
