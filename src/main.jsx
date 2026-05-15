@@ -7,9 +7,23 @@ import './styles.css'
 
 function cx(...xs) { return xs.filter(Boolean).join(' ') }
 
+function timeAgo(dateStr) {
+  if (!dateStr) return null
+  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000)
+  if (days < 1) return 'today'
+  if (days === 1) return '1 day ago'
+  if (days < 7) return `${days} days ago`
+  const weeks = Math.floor(days / 7)
+  if (weeks < 5) return `${weeks}w ago`
+  const months = Math.floor(days / 30)
+  if (months < 12) return `${months}mo ago`
+  return `${Math.floor(days / 365)}y ago`
+}
+
 function Badge({ children }) { return <span className="badge">{children}</span> }
 
 function ArticleCard({ article, active, onOpen, onSave }) {
+  const ago = timeAgo(article.published_at)
   return (
     <article className={cx('card', active && 'card-active')} onClick={() => onOpen(article.id)}>
       <div className="card-meta">
@@ -20,7 +34,7 @@ function ArticleCard({ article, active, onOpen, onSave }) {
       <h2>{article.title}</h2>
       {article.excerpt && <p>{article.excerpt}</p>}
       <div className="card-foot">
-        <span>{article.word_count?.toLocaleString()} words · {article.reddit_score ?? 0} points</span>
+        <span>{article.word_count?.toLocaleString()} words · {article.reddit_score ?? 0} points{ago && ` · ${ago}`}</span>
         <button className="icon-btn" onClick={e => { e.stopPropagation(); onSave(article) }} aria-label="save">
           {article.saved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
         </button>
@@ -320,7 +334,7 @@ function App() {
   const currentArticle = selected?.id === selectedId ? selected : null
 
   async function refresh() {
-    const { articles } = await listArticles({ q: query, status: 'ready', sort, min_words: minWords })
+    const { articles } = await listArticles({ q: query, status: 'ready', sort: query ? 'published' : sort, min_words: minWords })
     setArticles(articles)
   }
 
@@ -413,7 +427,7 @@ function App() {
         onToggle={toggleSidebar}
         mobileOpen={mobileNavOpen}
       />
-      {mobileNavOpen && <div className="mobile-nav-backdrop" onClick={() => setMobileNavOpen(false)} />}
+      <div className={cx('mobile-nav-backdrop', mobileNavOpen && 'is-open')} onClick={() => setMobileNavOpen(false)} />
       <button className="mobile-hamburger" onClick={() => setMobileNavOpen(v => !v)} aria-label="Menu">
         <Menu size={18} />
       </button>
