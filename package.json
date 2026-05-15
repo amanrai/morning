@@ -17,6 +17,7 @@
     "worker:fetcher:discover": "npm run worker:discover:reddit",
     "worker:fetcher:fetch": "npm run worker:extract",
     "build": "vite build",
+    "build:cf-api": "VITE_API_BASE=https://api.973858987.xyz vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
