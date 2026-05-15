@@ -761,7 +761,7 @@ button { cursor: pointer; }
   .panel { width: 100%; height: auto; min-height: 100svh; overflow: clip; }
   .carousel-footer { bottom: 72px; }
   .cards { width: auto; margin-inline: 16px; }
-  .reader { min-height: 100svh; height: auto; padding: 0 clamp(22px, 5vw, 48px) 64px; }
+  .reader { min-height: 100svh; height: auto; overflow: clip; padding: 0 clamp(22px, 5vw, 48px) 64px; }
   .reader.empty { display: none; }
   .reader-actions { margin: 0 0 34px; flex-wrap: wrap; gap: 8px; align-items: center; }
   .reader-actions > .btn { width: 30px; min-width: 30px; height: 30px; padding: 0; }

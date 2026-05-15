@@ -93,6 +93,7 @@ function CardList({ articles, selectedId, onOpen, onSave, emptyMessage }) {
 
 function CarouselPanel({ articles, onOpen, interval }) {
   const [index, setIndex] = useState(0)
+  const touchStartX = useRef(null)
 
   const prev = () => setIndex(i => (i - 1 + articles.length) % articles.length)
   const next = () => setIndex(i => (i + 1) % articles.length)
@@ -112,6 +113,15 @@ function CarouselPanel({ articles, onOpen, interval }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [articles.length])
 
+  function onTouchStart(e) { touchStartX.current = e.touches[0].clientX }
+  function onTouchEnd(e) {
+    if (touchStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    touchStartX.current = null
+    if (Math.abs(dx) < 40) return
+    dx < 0 ? next() : prev()
+  }
+
   const article = articles[index]
 
   if (!article) return (
@@ -126,7 +136,7 @@ function CarouselPanel({ articles, onOpen, interval }) {
   ].filter(Boolean).join(' · ')
 
   return (
-    <div className="carousel">
+    <div className="carousel" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       {interval > 0 && (
         <div key={`${index}-${interval}`} className="carousel-progress" style={{ '--dur': `${interval}s` }} />
       )}
