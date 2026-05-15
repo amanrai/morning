@@ -15,7 +15,7 @@ export function readSubredditsFile(path = join(here, 'subreddits.txt')) {
 
 export const MIN_WORDS = Number(process.env.MIN_WORDS ?? 100)
 export const MAX_FETCH_PER_RUN = process.env.MAX_FETCH_PER_RUN ? Number(process.env.MAX_FETCH_PER_RUN) : null
-export const REDDIT_FETCH_CONCURRENCY = Number(process.env.REDDIT_FETCH_CONCURRENCY ?? process.env.ARTICLE_FETCH_CONCURRENCY ?? 1)
+export const REDDIT_FETCH_CONCURRENCY = Number(process.env.ARTICLE_FETCH_CONCURRENCY ?? process.env.REDDIT_FETCH_CONCURRENCY ?? 1)
 export const REDDIT_PAGE_LIMIT = Number(process.env.REDDIT_PAGE_LIMIT ?? 100)
 export const REDDIT_MAX_PAGES = Number(process.env.REDDIT_MAX_PAGES ?? 10)
 export const REDDIT_SORT = process.env.REDDIT_SORT || 'top'
