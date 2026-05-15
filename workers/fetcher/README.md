@@ -50,13 +50,14 @@ KERNEL_CREATE_RETRIES=6
 KERNEL_RETRY_DELAY_MS=15000
 MIN_WORDS=100
 MAX_FETCH_PER_RUN=1000 # optional; unset means all queued articles
-REDDIT_FETCH_CONCURRENCY=3
+ARTICLE_FETCH_CONCURRENCY=1
+REDDIT_FETCH_CONCURRENCY=1 # legacy name; still supported
 REDDIT_PAGE_LIMIT=100
 REDDIT_MAX_PAGES=10
 REDDIT_SORT=top
 REDDIT_TIME=year
 REDDIT_LOOKBACK_DAYS=365
-REQUEST_DELAY_MS=1500
+REQUEST_DELAY_MS=5000
 FETCHER_SUBREDDITS_FILE=workers/fetcher/subreddits.txt
 FETCHER_SUBREDDITS=longreads,TrueReddit
 ```
@@ -81,17 +82,18 @@ FETCHER_SUBREDDITS=longreads,TrueReddit
 2. Fetches article HTML.
 3. Runs Mozilla Readability.
 4. If normal fetch/Readability fails in a browser-worthy way — 403/401/429, too short, empty Readability output, JS/access-denied style errors — retries with Kernel browser rendering when `KERNEL_API_KEY` is configured.
-   - Kernel browser fallback has its own internal concurrency gate, default `KERNEL_CONCURRENCY=3`.
+   - Kernel browser fallback has its own internal concurrency gate, default `KERNEL_CONCURRENCY=3`; lower it to `1` if Kernel starts returning 429s.
    - Browser creation retries on Kernel `429 Too Many Requests` with backoff.
 5. Uploads sanitized reader HTML to R2.
 6. Updates Neon article metadata, searchable text, content hash, and R2 key.
 7. Records `article_fetch_attempts`.
 
-By default, extraction processes all queued articles. Set `MAX_FETCH_PER_RUN` for a bounded test batch. Extraction concurrency is intentionally conservative:
+By default, extraction processes all queued articles one at a time and waits between attempts. Set `MAX_FETCH_PER_RUN` for a bounded test batch. Extraction concurrency is intentionally conservative:
 
 ```text
 MAX_FETCH_PER_RUN=1000 # optional; unset means all queued articles
-REDDIT_FETCH_CONCURRENCY=3
+ARTICLE_FETCH_CONCURRENCY=1
+REQUEST_DELAY_MS=5000
 ```
 
 When we add subscription/news fetchers, they should get separate source-specific concurrency controls.

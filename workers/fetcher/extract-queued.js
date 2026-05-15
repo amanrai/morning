@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { loadEnv } from './env.js'
-import { MAX_FETCH_PER_RUN, REDDIT_FETCH_CONCURRENCY } from './config.js'
+import { MAX_FETCH_PER_RUN, REDDIT_FETCH_CONCURRENCY, REQUEST_DELAY_MS } from './config.js'
 import { createDb, getQueuedArticles, markArticleFailed, markArticleReady, markFetching, recordFetchAttempt } from './db.js'
 import { extractArticle } from './extract.js'
 import { extractArticleWithKernel, shouldUseKernelFallback } from './kernel.js'
@@ -8,18 +8,25 @@ import { putArticleHtml } from './r2.js'
 
 loadEnv()
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 async function runPool(items, concurrency, worker) {
   const results = []
   let next = 0
 
-  async function loop() {
+  async function loop(workerIndex) {
+    if (workerIndex > 0 && REQUEST_DELAY_MS > 0) await sleep(workerIndex * REQUEST_DELAY_MS)
+
     while (next < items.length) {
       const index = next++
+      if (index > 0 && REQUEST_DELAY_MS > 0) await sleep(REQUEST_DELAY_MS)
       results[index] = await worker(items[index], index)
     }
   }
 
-  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => loop())
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, (_, index) => loop(index))
   await Promise.all(workers)
   return results
 }
@@ -40,7 +47,7 @@ async function extractOne(row) {
         extracted = await extractArticle(row.original_url)
       } catch (err) {
         if (!process.env.KERNEL_API_KEY || !shouldUseKernelFallback(err)) throw err
-        console.warn(`fetch failed ${row.id}: ${err.message}; trying Kernel browser fallback`)
+        console.warn(`origin fetch failed ${row.id}: ${err.message}; trying Kernel browser fallback`)
         extracted = await extractArticleWithKernel(row.original_url)
         method = 'playwright'
       }
