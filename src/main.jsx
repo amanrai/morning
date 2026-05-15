@@ -104,18 +104,40 @@ function CardList({ articles, selectedId, onOpen, onSave, emptyMessage, hasMore,
 
 function CarouselPanel({ articles, onOpen, interval, index, onIndex }) {
   const touchStartX = useRef(null)
+  const visited = useRef(new Set())
   const safeIndex = articles.length ? index % articles.length : 0
   const setIndex = (fn) => onIndex(i => {
     const next = typeof fn === 'function' ? fn(i % (articles.length || 1)) : fn
     return ((next % articles.length) + articles.length) % articles.length
   })
 
+  useEffect(() => { if (articles.length) visited.current.add(safeIndex) }, [safeIndex, articles.length])
+
   const prev = () => setIndex(i => (i - 1 + articles.length) % articles.length)
   const next = () => setIndex(i => (i + 1) % articles.length)
 
+  function nextUnvisited() {
+    onIndex(raw => {
+      const n = articles.length
+      if (!n) return raw
+      const current = raw % n
+      const unvisited = Array.from({ length: n }, (_, i) => i).filter(i => !visited.current.has(i))
+      let pick
+      if (!unvisited.length) {
+        visited.current.clear()
+        visited.current.add(current)
+        const others = Array.from({ length: n }, (_, i) => i).filter(i => i !== current)
+        pick = others.length ? others[Math.floor(Math.random() * others.length)] : current
+      } else {
+        pick = unvisited[Math.floor(Math.random() * unvisited.length)]
+      }
+      return pick
+    })
+  }
+
   useEffect(() => {
     if (!interval || articles.length <= 1) return
-    const t = setInterval(next, interval * 1000)
+    const t = setInterval(nextUnvisited, interval * 1000)
     return () => clearInterval(t)
   }, [interval, articles.length])
 
