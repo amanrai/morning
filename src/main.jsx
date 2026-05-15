@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Home, Layers, Moon, Search, Settings, Sun } from 'lucide-react'
+import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Home, Layers, Menu, Moon, Search, Settings, Sun } from 'lucide-react'
 import { getArticle, listArticles, updateArticle } from './lib/api.js'
 import { Reader } from './Reader.jsx'
 import './styles.css'
@@ -29,9 +29,9 @@ function ArticleCard({ article, active, onOpen, onSave }) {
   )
 }
 
-function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle }) {
+function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle, mobileOpen }) {
   return (
-    <nav className={cx('sidebar', collapsed && 'is-collapsed')}>
+    <nav className={cx('sidebar', collapsed && 'is-collapsed', mobileOpen && 'mobile-open')}>
       <div className="sidebar-brand">
         {!collapsed && <span className="wordmark">Morning</span>}
         <button className="sidebar-collapse-btn" onClick={onToggle} title={collapsed ? 'Expand' : 'Collapse'}>
@@ -249,6 +249,7 @@ function App() {
   const [minWords, setMinWords] = useState(600)
   const [activePanel, setActivePanel] = useState('carousel')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [carouselInterval, setCarouselInterval] = useState(() => {
     const saved = Number(localStorage.getItem('morning.carouselInterval') ?? '')
     return Number.isFinite(saved) && saved >= 0 ? saved : 30
@@ -342,6 +343,7 @@ function App() {
     if (panel === 'home') setQuery('')
     clearReader()
     setActivePanel(panel)
+    setMobileNavOpen(false)
   }
 
   function togglePanel() {
@@ -365,7 +367,12 @@ function App() {
         onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
         collapsed={sidebarCollapsed}
         onToggle={toggleSidebar}
+        mobileOpen={mobileNavOpen}
       />
+      {mobileNavOpen && <div className="mobile-nav-backdrop" onClick={() => setMobileNavOpen(false)} />}
+      <button className="mobile-hamburger" onClick={() => setMobileNavOpen(v => !v)} aria-label="Menu">
+        <Menu size={18} />
+      </button>
       {selectedId ? (
         <Reader
           ref={readerRef}

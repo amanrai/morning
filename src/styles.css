@@ -354,6 +354,25 @@ button { cursor: pointer; }
 .min-words-label span:last-child { color: hsl(var(--foreground)); font-weight: 600; letter-spacing: 0; text-transform: none; }
 .min-words-control input[type="range"] { width: 120px; accent-color: hsl(var(--foreground)); cursor: pointer; }
 
+/* ── Mobile hamburger (hidden on desktop) ── */
+
+.mobile-hamburger {
+  display: none;
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 100;
+  width: 36px;
+  height: 36px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--library-bg));
+  color: hsl(var(--foreground));
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px hsl(var(--foreground) / .08);
+}
+.mobile-nav-backdrop { display: none; }
+
 /* ── Carousel ── */
 
 .carousel {
@@ -695,7 +714,25 @@ button { cursor: pointer; }
 
 @media (max-width: 1100px) {
   .app-shell { display: block; }
-  .sidebar { display: none; }
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100%;
+    z-index: 200;
+    transform: translateX(-110%);
+    transition: transform .22s ease;
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 32px hsl(var(--foreground) / .15);
+  }
+  .mobile-nav-backdrop {
+    position: fixed;
+    inset: 0;
+    background: hsl(var(--foreground) / .3);
+    z-index: 190;
+  }
+  .mobile-hamburger { display: flex; }
   .panel { width: 100%; height: auto; min-height: 100svh; overflow-x: clip; }
   .cards { width: auto; margin-inline: 16px; }
   .reader { min-height: 100svh; height: auto; padding: 0 clamp(22px, 5vw, 48px) 64px; }
