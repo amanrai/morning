@@ -1,0 +1,15 @@
+longreads
+TrueReddit
+DepthHub
+Foodforthought
+indepthstories
+AskHistorians
+history
+philosophy
+science
+technology
+Economics
+PoliticalDiscussion
+design
+literature
+books

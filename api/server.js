@@ -29,10 +29,13 @@ app.get('/api/articles', (req, res) => {
     saved: 'saved_at DESC',
   }[sort] || 'COALESCE(fetched_at, discovered_at) DESC'
 
+  const minWords = Number(req.query.min_words || 0)
+
   const where = []
   const params = []
   if (status !== 'all') { where.push('status = ?'); params.push(status) }
   if (sort === 'saved') where.push('saved = 1')
+  if (minWords > 0) { where.push('word_count >= ?'); params.push(minWords) }
   if (q) {
     where.push(`id IN (SELECT rowid FROM articles_fts WHERE articles_fts MATCH ?)`)
     params.push(q.split(/\s+/).map(term => `${term.replace(/[^\p{L}\p{N}_-]/gu, '')}*`).filter(Boolean).join(' OR ') || q)

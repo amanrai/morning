@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Archive, Bookmark, BookmarkCheck, ExternalLink, Menu, Moon, RefreshCw, Search, Sparkles, Sun } from 'lucide-react'
-import { discover, fetchQueued, getArticle, health, listArticles, updateArticle } from './lib/api.js'
+import { Archive, Bookmark, BookmarkCheck, ExternalLink, Menu, Moon, Search, Sparkles, Sun } from 'lucide-react'
+import { getArticle, listArticles, updateArticle } from './lib/api.js'
 import './styles.css'
 
 function cx(...xs) { return xs.filter(Boolean).join(' ') }
@@ -75,9 +75,8 @@ function App() {
   const [selectedId, setSelectedId] = useState(null)
   const [selected, setSelected] = useState(null)
   const [query, setQuery] = useState('')
-  const [sort, setSort] = useState('synced')
-  const [status, setStatus] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [sort, setSort] = useState('published')
+  const [minWords, setMinWords] = useState(600)
   const [readerScrolled, setReaderScrolled] = useState(false)
   const [fontScale, setFontScale] = useState(() => {
     const saved = Number(localStorage.getItem('morning.fontScale') ?? '')
@@ -100,16 +99,12 @@ function App() {
   const currentArticle = selected?.id === selectedId ? selected : null
 
   async function refresh() {
-    const [{ articles }, h] = await Promise.all([
-      listArticles({ q: query, status: 'ready', sort }),
-      health().catch(() => null),
-    ])
+    const { articles } = await listArticles({ q: query, status: 'ready', sort, min_words: minWords })
     setArticles(articles)
-    setStatus(h)
     if (!selectedId && articles[0]) setSelectedId(articles[0].id)
   }
 
-  useEffect(() => { refresh().catch(console.error) }, [query, sort])
+  useEffect(() => { refresh().catch(console.error) }, [query, sort, minWords])
   useEffect(() => { localStorage.setItem('morning.fontScale', String(fontScale)) }, [fontScale])
   useEffect(() => {
     if (!selectedId) return
@@ -143,17 +138,6 @@ function App() {
     }
   }
 
-  async function runDiscovery() {
-    setLoading(true)
-    try {
-      await discover()
-      await refresh()
-      setTimeout(() => refresh().catch(console.error), 5000)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   async function patchSelected(patch) {
     if (!selected) return
     const { article } = await updateArticle(selected.id, patch)
@@ -184,13 +168,9 @@ function App() {
           <div className="masthead-copy">
             <p className="eyebrow">Morning</p>
           </div>
-          <div className="masthead-actions">
-            <Button onClick={runDiscovery} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={16}/> Discover</Button>
-            <Button variant="secondary" onClick={async () => { setLoading(true); try { await fetchQueued(30); await refresh() } finally { setLoading(false) } }} disabled={loading}>Fetch queued</Button>
-          </div>
         </header>
         <section className="library-controls">
-          <label className="search"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search your local library" /></label>
+          <label className="search"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Find something to read" />{query && <button className="search-clear" onClick={() => setQuery('')} aria-label="Clear search">✕</button>}</label>
           <label className="sort-control">
             <span>Sort</span>
             <select value={sort} onChange={e => setSort(e.target.value)}>
@@ -203,10 +183,14 @@ function App() {
               <option value="saved">Saved articles</option>
             </select>
           </label>
+          <div className="min-words-control">
+            <div className="min-words-label">
+              <span>Min length</span>
+              <span>{minWords.toLocaleString()} words</span>
+            </div>
+            <input type="range" min={100} max={2500} step={50} value={minWords} onChange={e => setMinWords(Number(e.target.value))} />
+          </div>
         </section>
-        <div className="stats">
-          {(status?.counts || []).map(c => <span key={c.status}><strong>{c.count}</strong> {c.status}</span>)}
-        </div>
         <div className="cards">
           {articles.map(a => <ArticleCard key={a.id} article={a} active={a.id === selectedId} onOpen={selectArticle} onSave={toggleSave} />)}
           {!articles.length && <div className="empty-list">No ready essays yet. Hit Discover; extraction may take a minute.</div>}

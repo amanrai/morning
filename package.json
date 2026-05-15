@@ -4,24 +4,32 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
+    "dev": "concurrently -n api,neon,web -c cyan,blue,magenta \"npm:dev:api\" \"npm:dev:neon-api\" \"npm:dev:web\"",
     "dev:api": "API_PORT=34567 node --watch api/server.js",
+    "dev:neon-api": "NEON_API_PORT=34568 node --watch api/neon-server.js",
     "dev:web": "vite --host 0.0.0.0 --port 45678",
     "start": "NODE_ENV=production node api/server.js",
+    "start:neon-api": "NODE_ENV=production NEON_API_PORT=34568 node api/neon-server.js",
+    "worker:fetcher": "node workers/fetcher/index.js",
+    "worker:discover:reddit": "node workers/fetcher/discover-reddit.js",
+    "worker:extract": "node workers/fetcher/extract-queued.js",
+    "worker:fetcher:discover": "npm run worker:discover:reddit",
+    "worker:fetcher:fetch": "npm run worker:extract",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1047.0",
     "@mozilla/readability": "latest",
     "@vitejs/plugin-react": "latest",
     "concurrently": "latest",
     "express": "latest",
     "jsdom": "latest",
     "lucide-react": "latest",
-    "vite": "latest",
-    "typescript": "latest",
+    "pg": "^8.20.0",
     "react": "latest",
-    "react-dom": "latest"
-  },
-  "devDependencies": {}
+    "react-dom": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  }
 }

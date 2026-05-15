@@ -96,10 +96,29 @@ try {
   db.exec(`INSERT INTO articles_fts(articles_fts) VALUES('rebuild')`)
 } catch {}
 
+function decodeEntities(str) {
+  if (!str) return str
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&mdash;/g, '—')
+    .replace(/&ndash;/g, '–')
+    .replace(/&hellip;/g, '…')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+}
+
 export function rowToArticle(row) {
   if (!row) return null
   return {
     ...row,
+    title: decodeEntities(row.title),
+    byline: decodeEntities(row.byline),
+    excerpt: decodeEntities(row.excerpt),
     saved: Boolean(row.saved),
     archived: Boolean(row.archived),
     seen: Boolean(row.seen),
