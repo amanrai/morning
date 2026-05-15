@@ -240,14 +240,25 @@ function SettingsPanel({ fontScale, onFontScale, carouselInterval, onCarouselInt
   )
 }
 
+function parseUrl() {
+  const p = new URLSearchParams(window.location.search)
+  return {
+    panel:     p.get('panel') || 'carousel',
+    articleId: p.get('article') ? Number(p.get('article')) : null,
+    query:     p.get('q') || '',
+    sort:      p.get('sort') || 'published',
+    minWords:  p.get('min') ? Number(p.get('min')) : 600,
+  }
+}
+
 function App() {
   const [articles, setArticles] = useState([])
-  const [selectedId, setSelectedId] = useState(null)
+  const [selectedId, setSelectedId] = useState(() => parseUrl().articleId)
   const [selected, setSelected] = useState(null)
-  const [query, setQuery] = useState('')
-  const [sort, setSort] = useState('published')
-  const [minWords, setMinWords] = useState(600)
-  const [activePanel, setActivePanel] = useState('carousel')
+  const [query, setQuery] = useState(() => parseUrl().query)
+  const [sort, setSort] = useState(() => parseUrl().sort)
+  const [minWords, setMinWords] = useState(() => parseUrl().minWords)
+  const [activePanel, setActivePanel] = useState(() => parseUrl().panel)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [carouselInterval, setCarouselInterval] = useState(() => {
@@ -278,6 +289,33 @@ function App() {
   useEffect(() => { localStorage.setItem('morning.fontScale', String(fontScale)) }, [fontScale])
   useEffect(() => { localStorage.setItem('morning.carouselInterval', String(carouselInterval)) }, [carouselInterval])
   useEffect(() => { localStorage.setItem('morning.carouselMinWords', String(carouselMinWords)) }, [carouselMinWords])
+
+  // Sync filter changes (sort, min, query) to URL without pushing a new history entry
+  useEffect(() => {
+    if (selectedId) return
+    const p = new URLSearchParams()
+    p.set('panel', activePanel)
+    if (query) p.set('q', query)
+    if (sort !== 'published') p.set('sort', sort)
+    if (minWords !== 600) p.set('min', String(minWords))
+    history.replaceState(null, '', `?${p}`)
+  }, [activePanel, query, sort, minWords, selectedId])
+
+  // Handle browser back/forward
+  useEffect(() => {
+    function onPopState() {
+      const { panel, articleId, query: q, sort: s, minWords: m } = parseUrl()
+      setActivePanel(panel)
+      setQuery(q)
+      setSort(s)
+      setMinWords(m)
+      setSelectedId(articleId)
+      if (!articleId) setSelected(null)
+      setReaderScrolled(false)
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
 
   const currentArticle = selected?.id === selectedId ? selected : null
 
@@ -313,6 +351,7 @@ function App() {
   }
 
   async function selectArticle(id) {
+    history.pushState(null, '', `?article=${id}`)
     setSelectedId(id)
     setSelected(null)
     setReaderScrolled(false)
@@ -340,6 +379,9 @@ function App() {
   }
 
   function selectPanel(panel) {
+    const p = new URLSearchParams()
+    p.set('panel', panel)
+    history.pushState(null, '', `?${p}`)
     if (panel === 'home') setQuery('')
     clearReader()
     setActivePanel(panel)
@@ -347,6 +389,8 @@ function App() {
   }
 
   function togglePanel() {
+    const p = new URLSearchParams({ panel: 'home' })
+    history.pushState(null, '', `?${p}`)
     clearReader()
     setActivePanel('home')
   }
