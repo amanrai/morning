@@ -308,6 +308,8 @@ function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme
     localStorage.setItem('morning.theme', theme)
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) meta.content = theme === 'dark' ? '#19130e' : '#f1eadf'
   }, [theme])
 
   useEffect(() => { localStorage.setItem('morning.fontScale', String(fontScale)) }, [fontScale])
