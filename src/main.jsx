@@ -1,15 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Bookmark, BookmarkCheck, Search } from 'lucide-react'
+import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Home, Layers, Moon, Search, Settings, Sun } from 'lucide-react'
 import { getArticle, listArticles, updateArticle } from './lib/api.js'
 import { Reader } from './Reader.jsx'
 import './styles.css'
 
 function cx(...xs) { return xs.filter(Boolean).join(' ') }
-
-function Button({ className, variant = 'default', ...props }) {
-  return <button className={cx('btn', `btn-${variant}`, className)} {...props} />
-}
 
 function Badge({ children }) { return <span className="badge">{children}</span> }
 
@@ -25,7 +21,7 @@ function ArticleCard({ article, active, onOpen, onSave }) {
       {article.excerpt && <p>{article.excerpt}</p>}
       <div className="card-foot">
         <span>{article.word_count?.toLocaleString()} words · {article.reddit_score ?? 0} points</span>
-        <button className="icon-btn" onClick={(e) => { e.stopPropagation(); onSave(article) }} aria-label="save">
+        <button className="icon-btn" onClick={e => { e.stopPropagation(); onSave(article) }} aria-label="save">
           {article.saved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
         </button>
       </div>
@@ -33,6 +29,216 @@ function ArticleCard({ article, active, onOpen, onSave }) {
   )
 }
 
+function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle }) {
+  return (
+    <nav className={cx('sidebar', collapsed && 'is-collapsed')}>
+      <div className="sidebar-brand">
+        {!collapsed && <span className="wordmark">Morning</span>}
+        <button className="sidebar-collapse-btn" onClick={onToggle} title={collapsed ? 'Expand' : 'Collapse'}>
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
+      </div>
+      {!collapsed && (
+        <>
+          <div className="sidebar-top">
+            <button className={cx('sidebar-item', active === 'carousel' && 'sidebar-active')} onClick={() => onSelect('carousel')}>
+              <Layers size={15} /><span>Carousel</span>
+            </button>
+            <button className={cx('sidebar-item', active === 'home' && 'sidebar-active')} onClick={() => onSelect('home')}>
+              <Home size={15} /><span>Home</span>
+            </button>
+            <button className={cx('sidebar-item', active === 'search' && 'sidebar-active')} onClick={() => onSelect('search')}>
+              <Search size={15} /><span>Search</span>
+            </button>
+          </div>
+          <div className="sidebar-bottom">
+            <button className="sidebar-item" onClick={onToggleTheme}>
+              {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+              <span>{theme === 'dark' ? 'Light' : 'Dark'} mode</span>
+            </button>
+            <button className={cx('sidebar-item', active === 'settings' && 'sidebar-active')} onClick={() => onSelect('settings')}>
+              <Settings size={15} /><span>Settings</span>
+            </button>
+          </div>
+        </>
+      )}
+    </nav>
+  )
+}
+
+function CardList({ articles, selectedId, onOpen, onSave, emptyMessage }) {
+  if (!articles.length) return <div className="empty-list">{emptyMessage ?? 'No ready essays yet.'}</div>
+  return (
+    <div className="cards">
+      {articles.map(a => (
+        <ArticleCard key={a.id} article={a} active={a.id === selectedId} onOpen={onOpen} onSave={onSave} />
+      ))}
+    </div>
+  )
+}
+
+function CarouselPanel({ articles, onOpen, interval }) {
+  const [index, setIndex] = useState(0)
+
+  const prev = () => setIndex(i => (i - 1 + articles.length) % articles.length)
+  const next = () => setIndex(i => (i + 1) % articles.length)
+
+  useEffect(() => {
+    if (!interval || articles.length <= 1) return
+    const t = setInterval(next, interval * 1000)
+    return () => clearInterval(t)
+  }, [interval, articles.length])
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next()
+      if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   prev()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [articles.length])
+
+  const article = articles[index]
+
+  if (!article) return (
+    <div className="carousel carousel-empty">
+      <p>No articles yet.</p>
+    </div>
+  )
+
+  const kicker = [
+    article.site_name || (article.subreddit ? `r/${article.subreddit}` : null),
+    `${article.reading_minutes} min read`,
+  ].filter(Boolean).join(' · ')
+
+  return (
+    <div className="carousel">
+      {interval > 0 && (
+        <div key={`${index}-${interval}`} className="carousel-progress" style={{ '--dur': `${interval}s` }} />
+      )}
+      <div className="carousel-body">
+        {kicker && <p className="carousel-kicker">{kicker}</p>}
+        <h1 className="carousel-title">{article.title}</h1>
+        {article.excerpt && <p className="carousel-dek">{article.excerpt}</p>}
+        <button className="carousel-read-btn" onClick={() => onOpen(article.id)}>Read</button>
+      </div>
+      <div className="carousel-footer">
+        <button className="carousel-nav-btn" onClick={prev} aria-label="Previous">
+          <ChevronLeft size={16} />
+        </button>
+        <span className="carousel-counter">{index + 1} / {articles.length}</span>
+        <button className="carousel-nav-btn" onClick={next} aria-label="Next">
+          <ChevronRight size={16} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function HomePanel({ articles, selectedId, sort, onSort, minWords, onMinWords, onOpen, onSave }) {
+  const [localMinWords, setLocalMinWords] = useState(minWords)
+  return (
+    <aside className="panel">
+      <div className="panel-controls">
+        <label className="sort-control">
+          <span>Sort</span>
+          <select value={sort} onChange={e => onSort(e.target.value)}>
+            <option value="synced">Latest synced</option>
+            <option value="published">Published</option>
+            <option value="score">Reddit score</option>
+            <option value="longest">Longest</option>
+            <option value="shortest">Shortest</option>
+            <option value="unread">Unread first</option>
+            <option value="saved">Saved</option>
+          </select>
+        </label>
+        <div className="min-words-control">
+          <div className="min-words-label">
+            <span>Min length</span>
+            <span>{localMinWords.toLocaleString()} words</span>
+          </div>
+          <input
+            type="range" min={100} max={2500} step={50}
+            value={localMinWords}
+            onChange={e => setLocalMinWords(Number(e.target.value))}
+            onPointerUp={e => onMinWords(Number(e.target.value))}
+          />
+        </div>
+      </div>
+      <CardList articles={articles} selectedId={selectedId} onOpen={onOpen} onSave={onSave} />
+    </aside>
+  )
+}
+
+function SearchPanel({ articles, selectedId, query, onQuery, onOpen, onSave }) {
+  return (
+    <aside className="panel">
+      <div className="panel-search-bar">
+        <label className="search">
+          <Search size={15} />
+          <input value={query} onChange={e => onQuery(e.target.value)} placeholder="Find something to read" autoFocus />
+          {query && <button className="search-clear" onClick={() => onQuery('')} aria-label="Clear">✕</button>}
+        </label>
+      </div>
+      {query
+        ? <CardList articles={articles} selectedId={selectedId} onOpen={onOpen} onSave={onSave} emptyMessage={`No results for "${query}"`} />
+        : <p className="panel-hint">Start typing to search.</p>
+      }
+    </aside>
+  )
+}
+
+const CAROUSEL_INTERVALS = [
+  { label: 'Manual', value: 0 },
+  { label: '10 seconds', value: 10 },
+  { label: '30 seconds', value: 30 },
+  { label: '1 minute', value: 60 },
+  { label: '3 minutes', value: 180 },
+  { label: '10 minutes', value: 600 },
+]
+
+function SettingsPanel({ fontScale, onFontScale, carouselInterval, onCarouselInterval, carouselMinWords, onCarouselMinWords }) {
+  const [localMinWords, setLocalMinWords] = useState(carouselMinWords)
+  return (
+    <aside className="panel">
+      <div className="panel-section-title">Settings</div>
+      <div className="settings-body">
+        <div className="settings-group">
+          <div className="settings-row-label">
+            <span>Reader font size</span>
+            <span>{Math.round(fontScale * 100)}%</span>
+          </div>
+          <div className="settings-stepper">
+            <button className="settings-step-btn" onClick={() => onFontScale(-1)}>A−</button>
+            <button className="settings-step-btn" onClick={() => onFontScale(1)}>A+</button>
+          </div>
+        </div>
+        <div className="settings-group">
+          <div className="settings-row-label">
+            <span>Carousel interval</span>
+          </div>
+          <select className="settings-select" value={carouselInterval} onChange={e => onCarouselInterval(Number(e.target.value))}>
+            {CAROUSEL_INTERVALS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="settings-group">
+          <div className="settings-row-label">
+            <span>Carousel min. length</span>
+            <span>{localMinWords.toLocaleString()} words</span>
+          </div>
+          <input
+            type="range" min={100} max={2500} step={50}
+            value={localMinWords}
+            onChange={e => setLocalMinWords(Number(e.target.value))}
+            onPointerUp={e => onCarouselMinWords(Number(e.target.value))}
+          />
+        </div>
+      </div>
+    </aside>
+  )
+}
 
 function App() {
   const [articles, setArticles] = useState([])
@@ -41,12 +247,21 @@ function App() {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('published')
   const [minWords, setMinWords] = useState(600)
+  const [activePanel, setActivePanel] = useState('carousel')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [carouselInterval, setCarouselInterval] = useState(() => {
+    const saved = Number(localStorage.getItem('morning.carouselInterval') ?? '')
+    return Number.isFinite(saved) && saved >= 0 ? saved : 30
+  })
+  const [carouselMinWords, setCarouselMinWords] = useState(() => {
+    const saved = Number(localStorage.getItem('morning.carouselMinWords') ?? '')
+    return Number.isFinite(saved) && saved > 0 ? saved : 1500
+  })
   const [readerScrolled, setReaderScrolled] = useState(false)
   const [fontScale, setFontScale] = useState(() => {
     const saved = Number(localStorage.getItem('morning.fontScale') ?? '')
     return saved > 0 && Number.isFinite(saved) ? saved : 1
   })
-  const [libraryCollapsed, setLibraryCollapsed] = useState(false)
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('morning.theme')
     if (saved) return saved
@@ -59,7 +274,10 @@ function App() {
     localStorage.setItem('morning.theme', theme)
   }, [theme])
 
-  const selectedInList = useMemo(() => articles.find(a => a.id === selectedId), [articles, selectedId])
+  useEffect(() => { localStorage.setItem('morning.fontScale', String(fontScale)) }, [fontScale])
+  useEffect(() => { localStorage.setItem('morning.carouselInterval', String(carouselInterval)) }, [carouselInterval])
+  useEffect(() => { localStorage.setItem('morning.carouselMinWords', String(carouselMinWords)) }, [carouselMinWords])
+
   const currentArticle = selected?.id === selectedId ? selected : null
 
   async function refresh() {
@@ -68,24 +286,20 @@ function App() {
   }
 
   useEffect(() => {
-    setSelectedId(null)
-    setSelected(null)
-    setReaderScrolled(false)
+    clearReader()
     refresh().catch(console.error)
   }, [query, sort, minWords])
-  useEffect(() => { localStorage.setItem('morning.fontScale', String(fontScale)) }, [fontScale])
+
   useEffect(() => {
     if (!selectedId) return
     let cancelled = false
     setSelected(null)
     setReaderScrolled(false)
-    window.scrollTo({ top: 0, behavior: 'auto' })
     readerRef.current?.scrollTo({ top: 0, behavior: 'auto' })
     getArticle(selectedId).then(({ article }) => {
       if (cancelled) return
       setSelected(article)
       setReaderScrolled(false)
-      window.scrollTo({ top: 0, behavior: 'auto' })
       readerRef.current?.scrollTo({ top: 0, behavior: 'auto' })
     }).catch(console.error)
     return () => { cancelled = true }
@@ -101,7 +315,6 @@ function App() {
     setSelectedId(id)
     setSelected(null)
     setReaderScrolled(false)
-    window.scrollTo({ top: 0, behavior: 'auto' })
     readerRef.current?.scrollTo({ top: 0, behavior: 'auto' })
     try {
       const { article } = await getArticle(id)
@@ -125,63 +338,77 @@ function App() {
     if (selected?.id === updated.id) setSelected({ ...selected, saved: updated.saved })
   }
 
-  function toggleLibrary() {
-    if (window.matchMedia('(max-width: 1100px)').matches) {
-      setSelected(null)
-      setLibraryCollapsed(false)
-      window.scrollTo({ top: 0, behavior: 'auto' })
-    } else {
-      setLibraryCollapsed(v => !v)
-    }
+  function selectPanel(panel) {
+    if (panel === 'home') setQuery('')
+    clearReader()
+    setActivePanel(panel)
   }
 
+  function togglePanel() {
+    clearReader()
+    setActivePanel('home')
+  }
+
+  function adjustFontScale(delta) {
+    setFontScale(v => Math.max(0.85, Math.min(1.3, Number((v + delta * 0.05).toFixed(2)))))
+  }
+
+  const sharedCardProps = { articles, selectedId, onOpen: selectArticle, onSave: toggleSave }
+  const toggleSidebar = () => setSidebarCollapsed(v => !v)
+
   return (
-    <main className={cx('app-shell', libraryCollapsed && 'library-collapsed')}>
-      <aside className={cx('library', selected && 'has-selection', libraryCollapsed && 'collapsed')}>
-        <header className="masthead">
-          <div className="masthead-copy">
-            <p className="eyebrow">Morning</p>
-          </div>
-        </header>
-        <section className="library-controls">
-          <label className="search"><Search size={16}/><input value={query} onChange={e => { clearReader(); setQuery(e.target.value) }} placeholder="Find something to read" />{query && <button className="search-clear" onClick={() => { clearReader(); setQuery('') }} aria-label="Clear search">✕</button>}</label>
-          <label className="sort-control">
-            <span>Sort</span>
-            <select value={sort} onChange={e => { clearReader(); setSort(e.target.value) }}>
-              <option value="synced">Latest synced</option>
-              <option value="published">Published</option>
-              <option value="score">Reddit score</option>
-              <option value="longest">Longest</option>
-              <option value="shortest">Shortest</option>
-              <option value="unread">Unread first</option>
-              <option value="saved">Saved articles</option>
-            </select>
-          </label>
-          <div className="min-words-control">
-            <div className="min-words-label">
-              <span>Min length</span>
-              <span>{minWords.toLocaleString()} words</span>
-            </div>
-            <input type="range" min={100} max={2500} step={50} value={minWords} onChange={e => { clearReader(); setMinWords(Number(e.target.value)) }} />
-          </div>
-        </section>
-        <div className="cards">
-          {articles.map(a => <ArticleCard key={a.id} article={a} active={a.id === selectedId} onOpen={selectArticle} onSave={toggleSave} />)}
-          {!articles.length && <div className="empty-list">No ready essays yet. Hit Discover; extraction may take a minute.</div>}
-        </div>
-      </aside>
-      <Reader
-        ref={readerRef}
-        article={currentArticle}
-        scrolled={readerScrolled}
-        onScroll={(e) => setReaderScrolled(e.currentTarget.scrollTop > 120)}
-        fontScale={fontScale}
-        onFontScale={(delta) => setFontScale(v => Math.max(0.85, Math.min(1.3, Number((v + delta * 0.05).toFixed(2)))))}
-        onToggleLibrary={toggleLibrary}
-        onPatch={patchSelected}
+    <main className={cx('app-shell', sidebarCollapsed && 'sidebar-collapsed')}>
+      <Sidebar
+        active={selectedId ? null : activePanel}
+        onSelect={selectPanel}
         theme={theme}
         onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+        collapsed={sidebarCollapsed}
+        onToggle={toggleSidebar}
       />
+      {selectedId ? (
+        <Reader
+          ref={readerRef}
+          article={currentArticle}
+          scrolled={readerScrolled}
+          onScroll={e => setReaderScrolled(e.currentTarget.scrollTop > 120)}
+          fontScale={fontScale}
+          onFontScale={adjustFontScale}
+          onToggleLibrary={togglePanel}
+          onPatch={patchSelected}
+          theme={theme}
+          onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+        />
+      ) : activePanel === 'carousel' ? (
+        <CarouselPanel
+          articles={articles.filter(a => (a.word_count ?? 0) >= carouselMinWords)}
+          onOpen={selectArticle}
+          interval={carouselInterval}
+        />
+      ) : activePanel === 'home' ? (
+        <HomePanel
+          {...sharedCardProps}
+          sort={sort}
+          onSort={v => setSort(v)}
+          minWords={minWords}
+          onMinWords={v => setMinWords(v)}
+        />
+      ) : activePanel === 'search' ? (
+        <SearchPanel
+          {...sharedCardProps}
+          query={query}
+          onQuery={v => setQuery(v)}
+        />
+      ) : activePanel === 'settings' ? (
+        <SettingsPanel
+          fontScale={fontScale}
+          onFontScale={adjustFontScale}
+          carouselInterval={carouselInterval}
+          onCarouselInterval={setCarouselInterval}
+          carouselMinWords={carouselMinWords}
+          onCarouselMinWords={setCarouselMinWords}
+        />
+      ) : null}
     </main>
   )
 }

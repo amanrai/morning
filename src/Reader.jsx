@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import { Archive, Bookmark, BookmarkCheck, ExternalLink, Menu, Moon, Sparkles, Sun } from 'lucide-react'
+import { Archive, ArrowLeft, Bookmark, BookmarkCheck, ExternalLink, Moon, Sparkles, Sun } from 'lucide-react'
 
 function cx(...xs) { return xs.filter(Boolean).join(' ') }
 
@@ -37,7 +37,7 @@ export const Reader = React.forwardRef(function Reader(
   return (
     <section ref={ref} onScroll={onScroll} className="reader">
       <div className="reader-actions">
-        <Button variant="ghost" className="reader-icon-btn" onClick={onToggleLibrary} aria-label="Toggle library" title="Library"><Menu size={14} /></Button>
+        <Button variant="ghost" className="reader-icon-btn" onClick={onToggleLibrary} aria-label="Back" title="Back"><ArrowLeft size={14} /></Button>
         <div className={cx('reader-sticky-title', scrolled && 'visible')}>{article.title}</div>
         <div className="reader-action-group">
           <Button variant="ghost" className="reader-icon-btn" onClick={() => onPatch({ saved: !article.saved })} aria-label="Save article" title="Save">
