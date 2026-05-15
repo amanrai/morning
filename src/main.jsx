@@ -102,9 +102,13 @@ function CardList({ articles, selectedId, onOpen, onSave, emptyMessage, hasMore,
   )
 }
 
-function CarouselPanel({ articles, onOpen, interval }) {
-  const [index, setIndex] = useState(0)
+function CarouselPanel({ articles, onOpen, interval, index, onIndex }) {
   const touchStartX = useRef(null)
+  const safeIndex = articles.length ? index % articles.length : 0
+  const setIndex = (fn) => onIndex(i => {
+    const next = typeof fn === 'function' ? fn(i % (articles.length || 1)) : fn
+    return ((next % articles.length) + articles.length) % articles.length
+  })
 
   const prev = () => setIndex(i => (i - 1 + articles.length) % articles.length)
   const next = () => setIndex(i => (i + 1) % articles.length)
@@ -133,7 +137,7 @@ function CarouselPanel({ articles, onOpen, interval }) {
     dx < 0 ? next() : prev()
   }
 
-  const article = articles[index]
+  const article = articles[safeIndex]
 
   if (!article) return (
     <div className="carousel carousel-empty">
@@ -149,7 +153,7 @@ function CarouselPanel({ articles, onOpen, interval }) {
   return (
     <div className="carousel" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       {interval > 0 && (
-        <div key={`${index}-${interval}`} className="carousel-progress" style={{ '--dur': `${interval}s` }} />
+        <div key={`${safeIndex}-${interval}`} className="carousel-progress" style={{ '--dur': `${interval}s` }} />
       )}
       <div className="carousel-body">
         {kicker && <p className="carousel-kicker">{kicker}</p>}
@@ -161,7 +165,7 @@ function CarouselPanel({ articles, onOpen, interval }) {
         <button className="carousel-nav-btn" onClick={prev} aria-label="Previous">
           <ChevronLeft size={16} />
         </button>
-        <span className="carousel-counter">{index + 1} / {articles.length}</span>
+        <span className="carousel-counter">{safeIndex + 1} / {articles.length}</span>
         <button className="carousel-nav-btn" onClick={next} aria-label="Next">
           <ChevronRight size={16} />
         </button>
@@ -294,6 +298,7 @@ function App() {
   const [sort, setSort] = useState(() => parseUrl().sort)
   const [minWords, setMinWords] = useState(() => parseUrl().minWords)
   const [activePanel, setActivePanel] = useState(() => parseUrl().panel)
+  const [carouselIndex, setCarouselIndex] = useState(() => Math.floor(Math.random() * 1000))
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [carouselInterval, setCarouselInterval] = useState(() => {
@@ -491,6 +496,8 @@ function App() {
           articles={articles.filter(a => (a.word_count ?? 0) >= carouselMinWords)}
           onOpen={selectArticle}
           interval={carouselInterval}
+          index={carouselIndex}
+          onIndex={setCarouselIndex}
         />
       ) : activePanel === 'home' ? (
         <HomePanel
