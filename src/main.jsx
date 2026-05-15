@@ -346,7 +346,7 @@ function App() {
   const currentArticle = selected?.id === selectedId ? selected : null
 
   async function refresh() {
-    const { articles } = await listArticles({ q: query, status: 'ready', sort: query ? 'published' : sort, min_words: minWords })
+    const { articles } = await listArticles({ q: query, status: 'ready', sort, min_words: minWords })
     setArticles(articles)
   }
 
