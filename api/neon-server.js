@@ -1,4 +1,6 @@
 import express from 'express'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 import { getObjectText } from './r2-client.js'
 import { getCurrentUserId, loadEnv, rowToArticle, withDb } from './neon-db.js'
 
@@ -6,6 +8,8 @@ loadEnv()
 
 const app = express()
 const port = Number(process.env.NEON_API_PORT ?? 34568)
+const root = dirname(dirname(fileURLToPath(import.meta.url)))
+const distDir = join(root, 'dist')
 
 app.use(express.json({ limit: '1mb' }))
 
@@ -220,6 +224,14 @@ app.patch('/api/articles/:id', async (req, res, next) => {
 app.post('/api/discover', (_req, res) => res.status(501).json({ error: 'run worker:discover:reddit separately' }))
 app.post('/api/fetch-queued', (_req, res) => res.status(501).json({ error: 'run worker:extract separately' }))
 app.get('/api/runs', (_req, res) => res.json({ runs: [] }))
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(distDir))
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) return next()
+    res.sendFile('index.html', { root: distDir })
+  })
+}
 
 app.use((err, _req, res, _next) => {
   console.error(err)
