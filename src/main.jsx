@@ -132,6 +132,12 @@ function App() {
     return () => { cancelled = true }
   }, [selectedId])
 
+  function clearReader() {
+    setSelectedId(null)
+    setSelected(null)
+    setReaderScrolled(false)
+  }
+
   async function selectArticle(id) {
     setSelectedId(id)
     setSelected(null)
@@ -179,10 +185,10 @@ function App() {
           </div>
         </header>
         <section className="library-controls">
-          <label className="search"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Find something to read" />{query && <button className="search-clear" onClick={() => setQuery('')} aria-label="Clear search">✕</button>}</label>
+          <label className="search"><Search size={16}/><input value={query} onChange={e => { clearReader(); setQuery(e.target.value) }} placeholder="Find something to read" />{query && <button className="search-clear" onClick={() => { clearReader(); setQuery('') }} aria-label="Clear search">✕</button>}</label>
           <label className="sort-control">
             <span>Sort</span>
-            <select value={sort} onChange={e => setSort(e.target.value)}>
+            <select value={sort} onChange={e => { clearReader(); setSort(e.target.value) }}>
               <option value="synced">Latest synced</option>
               <option value="published">Published</option>
               <option value="score">Reddit score</option>
@@ -197,7 +203,7 @@ function App() {
               <span>Min length</span>
               <span>{minWords.toLocaleString()} words</span>
             </div>
-            <input type="range" min={100} max={2500} step={50} value={minWords} onChange={e => setMinWords(Number(e.target.value))} />
+            <input type="range" min={100} max={2500} step={50} value={minWords} onChange={e => { clearReader(); setMinWords(Number(e.target.value)) }} />
           </div>
         </section>
         <div className="cards">
