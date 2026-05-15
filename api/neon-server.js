@@ -31,7 +31,7 @@ function searchQuery(q) {
     .map((term) => term.replace(/[^\p{L}\p{N}_-]/gu, '').trim())
     .filter(Boolean)
     .map((term) => `${term}:*`)
-    .join(' | ')
+    .join(' & ')
 }
 
 function articleSelectSql({ discoveryFilter = '' } = {}) {
@@ -53,7 +53,8 @@ function articleSelectSql({ discoveryFilter = '' } = {}) {
     d.source_kind, d.subreddit, d.score, d.comments_count,
     COALESCE(s.saved, false) AS saved, s.saved_at,
     COALESCE(s.archived, false) AS archived, s.archived_at,
-    COALESCE(s.seen, false) AS seen, s.liked
+    COALESCE(s.seen, false) AS seen, s.liked,
+    0::real AS search_rank
   FROM articles a
   LEFT JOIN best_discovery d ON d.article_id = a.id
   LEFT JOIN user_article_state s ON s.article_id = a.id AND s.user_id = $1`
@@ -95,18 +96,24 @@ app.get('/api/articles', async (req, res, next) => {
         where.push(`a.word_count >= $${params.length}`)
       }
 
+      let rankSql = '0::real AS search_rank'
+      let orderSql = orderByForSort(sort)
+
       if (q) {
         params.push(searchQuery(q))
-        where.push(`a.search_vector @@ to_tsquery('english', $${params.length})`)
+        const queryParam = params.length
+        where.push(`a.search_vector @@ to_tsquery('english', $${queryParam})`)
+        rankSql = `ts_rank_cd(a.search_vector, to_tsquery('english', $${queryParam})) AS search_rank`
+        orderSql = `search_rank DESC, ${orderSql}`
       }
 
       const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : ''
       params.push(limit, offset)
 
       return db.query(
-        `${articleSelectSql()}
+        `${articleSelectSql().replace('0::real AS search_rank', rankSql)}
          ${whereSql}
-         ORDER BY ${orderByForSort(sort)}
+         ORDER BY ${orderSql}
          LIMIT $${params.length - 1} OFFSET $${params.length}`,
         params,
       )
