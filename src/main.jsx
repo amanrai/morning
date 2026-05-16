@@ -110,13 +110,13 @@ function ArticleCard({ article, active, onOpen, onSave }) {
       <div className="card-meta">
         <Badge>{article.reading_minutes} min</Badge>
         {article.subreddit && <span>r/{article.subreddit}</span>}
-        {article.site_name && (
-          <span className="card-meta-site">
-            {article.favicon_url && <img className="favicon" src={article.favicon_url} alt="" onError={e => { e.currentTarget.style.display = 'none' }} />}
-            {article.site_name}
-          </span>
-        )}
       </div>
+      {(article.site_name || article.subreddit) && (
+        <div className="card-source">
+          {article.favicon_url && <img className="favicon card-favicon" src={article.favicon_url} alt="" onError={e => { e.currentTarget.style.display = 'none' }} />}
+          <span>{article.site_name || (article.subreddit ? `r/${article.subreddit}` : null)}</span>
+        </div>
+      )}
       <h2>{article.title}</h2>
       {article.excerpt && <p>{article.excerpt}</p>}
       <div className="card-foot">
