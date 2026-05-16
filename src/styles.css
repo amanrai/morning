@@ -607,7 +607,7 @@ button { cursor: pointer; }
   font-weight: 500;
   color: hsl(var(--muted-foreground));
 }
-.card-favicon { width: 24px; height: 24px; }
+.card-favicon { width: 48px; height: 48px; }
 .card-foot { justify-content: space-between; margin-top: 10px; flex-wrap: nowrap; }
 .badge {
   border: 1px solid hsl(var(--border));
@@ -696,7 +696,7 @@ button { cursor: pointer; }
   flex-shrink: 0;
   vertical-align: middle;
 }
-.favicon-kicker { width: 16px; height: 16px; }
+.favicon-kicker { width: 48px; height: 48px; }
 .reader-kicker {
   display: flex;
   align-items: center;
