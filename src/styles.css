@@ -178,9 +178,7 @@ button { cursor: pointer; }
   border-color: hsl(var(--border));
 }
 .sidebar-user {
-  display: flex;
-  align-items: center;
-  padding: 8px 16px 4px;
+  cursor: default;
 }
 .sidebar-active {
   background: hsl(var(--secondary));

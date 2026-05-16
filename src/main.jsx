@@ -148,8 +148,9 @@ function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle, 
             <button className={cx('sidebar-item', active === 'settings' && 'sidebar-active')} onClick={() => onSelect('settings')}>
               <Settings size={15} /><span>Settings</span>
             </button>
-            <div className="sidebar-user">
+            <div className="sidebar-user sidebar-item">
               <UserButton afterSignOutUrl="/" appearance={currentAppearance()} />
+              <span>Account</span>
             </div>
           </div>
         </>
