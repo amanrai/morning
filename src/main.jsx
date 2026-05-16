@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ClerkProvider, SignedIn, SignedOut, SignIn, useAuth, useClerk } from '@clerk/clerk-react'
 import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Activity, Home, Layers, Library, LogOut, Menu, Moon, Search, Settings, Sun } from 'lucide-react'
-import { getArticle, listArticles, updateArticle, setTokenGetter, getSyncedByHour, getSyncedBySite, getSites, getSiteArticles } from './lib/api.js'
+import { getArticle, listArticles, updateArticle, setTokenGetter, setSignOut, getSyncedByHour, getSyncedBySite, getSites, getSiteArticles } from './lib/api.js'
 import { Reader } from './Reader.jsx'
 import './styles.css'
 
@@ -131,7 +131,9 @@ function ArticleCard({ article, active, onOpen, onSave }) {
 
 function TokenSync() {
   const { getToken } = useAuth()
+  const { signOut } = useClerk()
   useEffect(() => { setTokenGetter(getToken) }, [getToken])
+  useEffect(() => { setSignOut(() => signOut({ redirectUrl: '/' })) }, [signOut])
   return null
 }
 

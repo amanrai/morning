@@ -1,7 +1,9 @@
 const API_BASE = import.meta.env.VITE_API_BASE || ''
 
 let _getToken = null
+let _signOut = null
 export function setTokenGetter(fn) { _getToken = fn }
+export function setSignOut(fn) { _signOut = fn }
 
 async function authHeaders() {
   const token = _getToken ? await _getToken() : null
@@ -13,6 +15,10 @@ export async function api(path, options) {
     headers: { 'content-type': 'application/json', ...(await authHeaders()), ...(options?.headers || {}) },
     ...options,
   })
+  if (res.status === 401) {
+    if (_signOut) await _signOut()
+    return
+  }
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
