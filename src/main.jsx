@@ -436,6 +436,9 @@ function MonitoringAllTime() {
   return (
     <section className="monitoring-section">
       <h3 className="monitoring-heading">All time — by site</h3>
+      {sites.length > 0 && (
+        <p className="monitoring-total">{sites.reduce((s, r) => s + r.synced_count, 0).toLocaleString()} articles total</p>
+      )}
       {sites.length === 0 ? <p className="monitoring-empty">No data yet.</p> : (
         <div className="monitoring-sites">
           {sites.map(s => (
