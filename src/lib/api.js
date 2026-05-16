@@ -1,8 +1,16 @@
 const API_BASE = import.meta.env.VITE_API_BASE || ''
 
+let _getToken = null
+export function setTokenGetter(fn) { _getToken = fn }
+
+async function authHeaders() {
+  const token = _getToken ? await _getToken() : null
+  return token ? { 'Authorization': `Bearer ${token}` } : {}
+}
+
 export async function api(path, options) {
   const res = await fetch(`${API_BASE}/api${path}`, {
-    headers: { 'content-type': 'application/json', ...(options?.headers || {}) },
+    headers: { 'content-type': 'application/json', ...(await authHeaders()), ...(options?.headers || {}) },
     ...options,
   })
   if (!res.ok) throw new Error(await res.text())

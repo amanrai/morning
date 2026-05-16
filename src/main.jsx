@@ -1,9 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { ClerkProvider, SignedIn, SignedOut, SignIn, UserButton, useAuth } from '@clerk/clerk-react'
 import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Home, Layers, Menu, Moon, Search, Settings, Sun } from 'lucide-react'
-import { getArticle, listArticles, updateArticle } from './lib/api.js'
+import { getArticle, listArticles, updateArticle, setTokenGetter } from './lib/api.js'
 import { Reader } from './Reader.jsx'
 import './styles.css'
+
+const CLERK_PK = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
 function cx(...xs) { return xs.filter(Boolean).join(' ') }
 
@@ -45,6 +48,12 @@ function ArticleCard({ article, active, onOpen, onSave }) {
   )
 }
 
+function TokenSync() {
+  const { getToken } = useAuth()
+  useEffect(() => { setTokenGetter(getToken) }, [getToken])
+  return null
+}
+
 function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle, mobileOpen }) {
   return (
     <nav className={cx('sidebar', collapsed && 'is-collapsed', mobileOpen && 'mobile-open')}>
@@ -75,6 +84,9 @@ function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle, 
             <button className={cx('sidebar-item', active === 'settings' && 'sidebar-active')} onClick={() => onSelect('settings')}>
               <Settings size={15} /><span>Settings</span>
             </button>
+            <div className="sidebar-user">
+              <UserButton afterSignOutUrl="/" />
+            </div>
           </div>
         </>
       )}
@@ -549,4 +561,17 @@ function App() {
   )
 }
 
-createRoot(document.getElementById('root')).render(<App />)
+createRoot(document.getElementById('root')).render(
+  <ClerkProvider publishableKey={CLERK_PK}>
+    <SignedOut>
+      <div className="sign-in-screen">
+        <div className="sign-in-wordmark">Morning</div>
+        <SignIn routing="hash" />
+      </div>
+    </SignedOut>
+    <SignedIn>
+      <TokenSync />
+      <App />
+    </SignedIn>
+  </ClerkProvider>
+)
