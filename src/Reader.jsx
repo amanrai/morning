@@ -58,7 +58,7 @@ export const Reader = React.forwardRef(function Reader(
       <header className="reader-head">
         <div className="reader-kicker">
           {article.favicon_url && <img className="favicon favicon-kicker" src={article.favicon_url} alt="" onError={e => { e.currentTarget.style.display = 'none' }} />}
-          {article.site_name || 'Essay'} · {article.reading_minutes} minute read
+          <span>{article.site_name || 'Essay'} · {article.reading_minutes} minute read</span>
         </div>
         <h1>{article.title}</h1>
         {article.byline && <p className="byline">{article.byline}</p>}
