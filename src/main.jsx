@@ -431,11 +431,6 @@ function MonitoringAllTime() {
 
   const maxCount = Math.max(1, sites[0]?.synced_count || 1)
 
-  function dateLabel(iso) {
-    if (!iso) return '—'
-    return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
-  }
-
   if (loading) return <p className="monitoring-empty">Loading…</p>
   return (
     <section className="monitoring-section">
@@ -443,12 +438,10 @@ function MonitoringAllTime() {
       {sites.length === 0 ? <p className="monitoring-empty">No data yet.</p> : (
         <div className="monitoring-sites">
           {sites.map(s => (
-            <div key={s.site} className="monitoring-site-row monitoring-site-row-alltime">
+            <div key={s.site} className="monitoring-site-row">
               <span className="monitoring-site-name">{s.site}</span>
               <div className="monitoring-site-bar"><div className="monitoring-site-fill" style={{ width: `${(s.synced_count / maxCount) * 100}%` }} /></div>
               <span className="monitoring-site-count">{s.synced_count}</span>
-              <span className="monitoring-site-date">{dateLabel(s.first_synced_at)}</span>
-              <span className="monitoring-site-date">{dateLabel(s.latest_synced_at)}</span>
             </div>
           ))}
         </div>

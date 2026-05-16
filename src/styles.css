@@ -849,22 +849,6 @@ button { cursor: pointer; }
   border-bottom-color: hsl(var(--foreground));
   font-weight: 600;
 }
-.monitoring-site-row-alltime {
-  grid-template-columns: 160px 1fr 40px 100px 100px;
-}
-.monitoring-site-date {
-  font-size: 11px;
-  color: hsl(var(--muted-foreground));
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-@media (max-width: 600px) {
-  .monitoring-site-row-alltime {
-    grid-template-columns: 1fr 60px 40px;
-  }
-  .monitoring-site-date { display: none; }
-}
 .monitoring-section {
   padding: 0 24px 32px;
   width: min(100%, 860px);
