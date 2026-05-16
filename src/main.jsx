@@ -399,6 +399,7 @@ function MonitoringHourly() {
             </div>
           ))}
         </div>
+        <p className="monitoring-total">{buckets.reduce((s, b) => s + b.total, 0)} articles synced</p>
       </section>
       <section className="monitoring-section">
         <h3 className="monitoring-heading">By site</h3>

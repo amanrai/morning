@@ -850,7 +850,7 @@ button { cursor: pointer; }
   font-weight: 600;
 }
 .monitoring-section {
-  padding: 0 24px 32px;
+  padding: 24px 24px 32px;
   width: min(100%, 860px);
   margin-inline: auto;
 }
@@ -866,6 +866,11 @@ button { cursor: pointer; }
   color: hsl(var(--muted-foreground));
   font-size: 13px;
   padding: 0 24px;
+}
+.monitoring-total {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
 }
 .monitoring-chart {
   display: flex;
