@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ClerkProvider, SignedIn, SignedOut, SignIn, SignUp, UserButton, useAuth } from '@clerk/clerk-react'
+import { ClerkProvider, SignedIn, SignedOut, SignIn, UserButton, useAuth } from '@clerk/clerk-react'
 import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Home, Layers, Menu, Moon, Search, Settings, Sun } from 'lucide-react'
 import { getArticle, listArticles, updateArticle, setTokenGetter } from './lib/api.js'
 import { Reader } from './Reader.jsx'
@@ -45,21 +45,18 @@ function clerkAppearance(isDark) {
 }
 
 function AuthScreen() {
-  const [hash, setHash] = useState(window.location.hash)
   const isDark = document.documentElement.dataset.theme === 'dark'
-  useEffect(() => {
-    const handler = () => setHash(window.location.hash)
-    window.addEventListener('hashchange', handler)
-    return () => window.removeEventListener('hashchange', handler)
-  }, [])
-  const isSignUp = hash.startsWith('#/sign-up')
+  const appearance = {
+    ...clerkAppearance(isDark),
+    elements: {
+      ...clerkAppearance(isDark).elements,
+      footer: { display: 'none' },
+    },
+  }
   return (
     <div className="sign-in-screen">
       <div className="sign-in-wordmark">Morning</div>
-      {isSignUp
-        ? <SignUp routing="hash" signInUrl="/" appearance={clerkAppearance(isDark)} />
-        : <SignIn routing="hash" signUpUrl="/#/sign-up" appearance={clerkAppearance(isDark)} />
-      }
+      <SignIn routing="hash" appearance={appearance} />
     </div>
   )
 }
