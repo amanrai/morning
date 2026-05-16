@@ -169,6 +169,17 @@ function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle, 
 }
 
 function CardList({ articles, selectedId, onOpen, onSave, emptyMessage, hasMore, onLoadMore, loadingMore }) {
+  const sentinelRef = useRef(null)
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && hasMore && !loadingMore) onLoadMore()
+    }, { rootMargin: '200px' })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [hasMore, loadingMore, onLoadMore])
+
   if (!articles.length) return <div className="empty-list">{emptyMessage ?? 'No ready essays yet.'}</div>
   return (
     <>
@@ -177,13 +188,9 @@ function CardList({ articles, selectedId, onOpen, onSave, emptyMessage, hasMore,
           <ArticleCard key={a.id} article={a} active={a.id === selectedId} onOpen={onOpen} onSave={onSave} />
         ))}
       </div>
-      {hasMore && (
-        <div className="load-more-row">
-          <button className="load-more-btn" onClick={onLoadMore} disabled={loadingMore}>
-            {loadingMore ? 'Loading…' : 'Load more'}
-          </button>
-        </div>
-      )}
+      <div ref={sentinelRef} className="load-more-sentinel">
+        {loadingMore && <span className="load-more-spinner" />}
+      </div>
     </>
   )
 }
