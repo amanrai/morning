@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ClerkProvider, SignedIn, SignedOut, SignIn, useAuth, useClerk } from '@clerk/clerk-react'
-import { Bookmark, BookmarkCheck, ChevronDown, ChevronLeft, ChevronRight, Activity, Home, Layers, LogOut, Menu, Moon, Search, Settings, Sun } from 'lucide-react'
+import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Activity, Home, Layers, Library, LogOut, Menu, Moon, Search, Settings, Sun } from 'lucide-react'
 import { getArticle, listArticles, updateArticle, setTokenGetter, getSyncedByHour, getSyncedBySite, getSites, getSiteArticles } from './lib/api.js'
 import { Reader } from './Reader.jsx'
 import './styles.css'
@@ -135,59 +135,44 @@ function TokenSync() {
   return null
 }
 
-function SourcesSection({ sources, selectedHostname, onSelect, open, onToggle }) {
+function SourcesListPanel({ sources, onSelect }) {
   const [q, setQ] = useState('')
-  const filtered = q.trim()
+  const list = q.trim()
     ? sources.filter(s => s.display_name.toLowerCase().includes(q.toLowerCase()) || s.hostname.toLowerCase().includes(q.toLowerCase()))
-    : null
-
-  function SourceList({ items }) {
-    return (
-      <div className="sources-list">
-        {items.map(s => (
-          <button key={s.hostname} className={cx('source-item', selectedHostname === s.hostname && 'source-active')} onClick={() => onSelect(s)}>
+    : sources
+  return (
+    <aside className="panel sources-list-panel">
+      <div className="sources-list-search-bar">
+        <Search size={13} />
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Filter sources…" autoFocus />
+        {q && <button className="search-clear" onClick={() => setQ('')} aria-label="Clear">✕</button>}
+      </div>
+      <div className="sources-list-grid">
+        {list.map(s => (
+          <button key={s.hostname} className="sources-list-item" onClick={() => onSelect(s)}>
             {s.favicon_url
-              ? <img className="favicon source-favicon" src={s.favicon_url} alt="" onError={e => { e.currentTarget.style.display = 'none' }} />
-              : <div className="source-favicon-placeholder" />}
-            <span className="source-name">{s.display_name}</span>
+              ? <img className="favicon sources-list-favicon" src={s.favicon_url} alt="" onError={e => { e.currentTarget.style.display = 'none' }} />
+              : <div className="source-favicon-placeholder sources-list-favicon" />}
+            <span className="sources-list-name">{s.display_name}</span>
             <span className="source-count">{s.total_count}</span>
           </button>
         ))}
       </div>
-    )
-  }
-
-  return (
-    <div className="sources-section">
-      <div className="sources-search-row">
-        <input
-          className="sources-search"
-          value={q}
-          onChange={e => setQ(e.target.value)}
-          placeholder="Sources…"
-        />
-        {!q && (
-          <button className="sources-toggle" onClick={onToggle} title={open ? 'Collapse' : 'Expand'}>
-            {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
-          </button>
-        )}
-      </div>
-      {filtered
-        ? <SourceList items={filtered} />
-        : open && <SourceList items={sources} />
-      }
-    </div>
+    </aside>
   )
 }
 
-function SourcePanel({ site, articles, selectedId, onOpen, onSave, hasMore, onLoadMore, loadingMore }) {
+function SourcePanel({ site, articles, selectedId, onOpen, onSave, hasMore, onLoadMore, loadingMore, onBack }) {
   return (
     <aside className="panel source-panel">
       <div className="source-panel-head">
-        {site.favicon_url && <img className="favicon source-panel-favicon" src={site.favicon_url} alt="" onError={e => { e.currentTarget.style.display = 'none' }} />}
-        <div className="source-panel-meta">
-          <h2 className="source-panel-name">{site.display_name}</h2>
-          <span className="source-panel-count">{site.total_count.toLocaleString()} articles</span>
+        <button className="source-back-btn" onClick={onBack} aria-label="Back to sources"><ChevronLeft size={15} /> Sources</button>
+        <div className="source-panel-identity">
+          {site.favicon_url && <img className="favicon source-panel-favicon" src={site.favicon_url} alt="" onError={e => { e.currentTarget.style.display = 'none' }} />}
+          <div className="source-panel-meta">
+            <h2 className="source-panel-name">{site.display_name}</h2>
+            <span className="source-panel-count">{site.total_count.toLocaleString()} articles</span>
+          </div>
         </div>
       </div>
       <CardList articles={articles} selectedId={selectedId} onOpen={onOpen} onSave={onSave} hasMore={hasMore} onLoadMore={onLoadMore} loadingMore={loadingMore} />
@@ -195,7 +180,7 @@ function SourcePanel({ site, articles, selectedId, onOpen, onSave, hasMore, onLo
   )
 }
 
-function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle, mobileOpen, sources, selectedHostname, onSelectSource, sourcesOpen, onToggleSources }) {
+function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle, mobileOpen }) {
   return (
     <nav className={cx('sidebar', collapsed && 'is-collapsed', mobileOpen && 'mobile-open')}>
       <div className="sidebar-brand">
@@ -216,7 +201,9 @@ function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle, 
             <button className={cx('sidebar-item', active === 'search' && 'sidebar-active')} onClick={() => onSelect('search')}>
               <Search size={15} /><span>Search</span>
             </button>
-            <SourcesSection sources={sources} selectedHostname={selectedHostname} onSelect={onSelectSource} open={sourcesOpen} onToggle={onToggleSources} />
+            <button className={cx('sidebar-item', (active === 'sources' || active === 'source') && 'sidebar-active')} onClick={() => onSelect('sources')}>
+              <Library size={15} /><span>Sources</span>
+            </button>
             <button className={cx('sidebar-item', active === 'monitoring' && 'sidebar-active')} onClick={() => onSelect('monitoring')}>
               <Activity size={15} /><span>Monitoring</span>
             </button>
@@ -610,7 +597,6 @@ function App() {
   const [hasMore, setHasMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [sources, setSources] = useState([])
-  const [sourcesOpen, setSourcesOpen] = useState(false)
   const [selectedSource, setSelectedSource] = useState(null)
   const [sourceArticles, setSourceArticles] = useState([])
   const [sourceOffset, setSourceOffset] = useState(0)
@@ -715,6 +701,7 @@ function App() {
     clearReader()
     setActivePanel('source')
     setMobileNavOpen(false)
+    history.replaceState(null, '', `?panel=source`)
     const { articles: fetched } = await getSiteArticles(site.hostname, { status: 'ready', sort: 'published', limit: LIMIT, offset: 0 })
     setSourceArticles(fetched)
     setSourceOffset(LIMIT)
@@ -817,11 +804,6 @@ function App() {
         collapsed={sidebarCollapsed}
         onToggle={toggleSidebar}
         mobileOpen={mobileNavOpen}
-        sources={sources}
-        selectedHostname={selectedSource?.hostname}
-        onSelectSource={selectSource}
-        sourcesOpen={sourcesOpen}
-        onToggleSources={() => setSourcesOpen(v => !v)}
       />
       <div className={cx('mobile-nav-backdrop', mobileNavOpen && 'is-open')} onClick={() => setMobileNavOpen(false)} />
       <button className="mobile-hamburger" onClick={() => setMobileNavOpen(v => !v)} aria-label="Menu">
@@ -862,6 +844,8 @@ function App() {
           query={query}
           onQuery={v => setQuery(v)}
         />
+      ) : activePanel === 'sources' ? (
+        <SourcesListPanel sources={sources} onSelect={selectSource} />
       ) : activePanel === 'source' && selectedSource ? (
         <SourcePanel
           site={selectedSource}
@@ -872,6 +856,7 @@ function App() {
           hasMore={sourceHasMore}
           onLoadMore={loadMoreSource}
           loadingMore={sourceLoadingMore}
+          onBack={() => setActivePanel('sources')}
         />
       ) : activePanel === 'monitoring' ? (
         <MonitoringPanel />
