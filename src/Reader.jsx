@@ -39,7 +39,7 @@ export const Reader = React.forwardRef(function Reader(
       <div className="reader-actions">
         <Button variant="ghost" className="reader-icon-btn" onClick={onToggleLibrary} aria-label="Back" title="Back"><ArrowLeft size={14} /></Button>
         <div className={cx('reader-sticky-title', scrolled && 'visible')}>
-          {article.favicon_url && <img className="favicon" src={article.favicon_url} alt="" onError={e => { e.currentTarget.style.display = 'none' }} />}
+          {article.favicon_url && <img className="favicon favicon-sticky" src={article.favicon_url} alt="" onError={e => { e.currentTarget.style.display = 'none' }} />}
           {article.title}
         </div>
         <div className="reader-action-group">

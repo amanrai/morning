@@ -693,8 +693,9 @@ button { cursor: pointer; }
   flex-shrink: 0;
   vertical-align: middle;
 }
+.card-favicon { width: 32px; height: 32px; }
 .favicon-kicker { width: 96px; height: 96px; }
-.card-favicon { width: 96px; height: 96px; }
+.favicon-sticky { width: 32px; height: 32px; }
 .reader-kicker {
   display: flex;
   align-items: center;
