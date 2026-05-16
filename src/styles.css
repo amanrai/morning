@@ -607,7 +607,6 @@ button { cursor: pointer; }
   font-weight: 500;
   color: hsl(var(--muted-foreground));
 }
-.card-favicon { width: 48px; height: 48px; }
 .card-foot { justify-content: space-between; margin-top: 10px; flex-wrap: nowrap; }
 .badge {
   border: 1px solid hsl(var(--border));
@@ -690,13 +689,12 @@ button { cursor: pointer; }
 .reader-sticky-title.visible { display: flex; opacity: 1; transform: translateY(0); }
 .reader-head, .prose { width: min(100%, 780px); max-width: 780px; margin-inline: auto; }
 .favicon {
-  width: 14px;
-  height: 14px;
   object-fit: contain;
   flex-shrink: 0;
   vertical-align: middle;
 }
-.favicon-kicker { width: 48px; height: 48px; }
+.favicon-kicker { width: 96px; height: 96px; }
+.card-favicon { width: 96px; height: 96px; }
 .reader-kicker {
   display: flex;
   align-items: center;
