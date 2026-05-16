@@ -38,7 +38,10 @@ export const Reader = React.forwardRef(function Reader(
     <section ref={ref} onScroll={onScroll} className="reader">
       <div className="reader-actions">
         <Button variant="ghost" className="reader-icon-btn" onClick={onToggleLibrary} aria-label="Back" title="Back"><ArrowLeft size={14} /></Button>
-        <div className={cx('reader-sticky-title', scrolled && 'visible')}>{article.title}</div>
+        <div className={cx('reader-sticky-title', scrolled && 'visible')}>
+          {article.favicon_url && <img className="favicon" src={article.favicon_url} alt="" onError={e => { e.currentTarget.style.display = 'none' }} />}
+          {article.title}
+        </div>
         <div className="reader-action-group">
           <Button variant="ghost" className="reader-icon-btn" onClick={() => onPatch({ saved: !article.saved })} aria-label="Save article" title="Save">
             {article.saved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
@@ -53,7 +56,10 @@ export const Reader = React.forwardRef(function Reader(
         </div>
       </div>
       <header className="reader-head">
-        <div className="reader-kicker">{article.site_name || 'Essay'} · {article.reading_minutes} minute read</div>
+        <div className="reader-kicker">
+          {article.favicon_url && <img className="favicon favicon-kicker" src={article.favicon_url} alt="" onError={e => { e.currentTarget.style.display = 'none' }} />}
+          {article.site_name || 'Essay'} · {article.reading_minutes} minute read
+        </div>
         <h1>{article.title}</h1>
         {article.byline && <p className="byline">{article.byline}</p>}
         {article.excerpt && <p className="dek">{article.excerpt}</p>}

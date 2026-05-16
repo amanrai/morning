@@ -597,6 +597,7 @@ button { cursor: pointer; }
 }
 .card-meta, .card-foot { display: flex; align-items: center; gap: 6px; color: hsl(var(--muted)); font-size: 11px; flex-wrap: wrap; }
 .card-meta { text-transform: uppercase; letter-spacing: .07em; }
+.card-meta-site { display: inline-flex; align-items: center; gap: 4px; }
 .card-foot { justify-content: space-between; margin-top: 10px; flex-wrap: nowrap; }
 .badge {
   border: 1px solid hsl(var(--border));
@@ -660,6 +661,8 @@ button { cursor: pointer; }
   flex: 1;
   min-width: 0;
   align-self: center;
+  align-items: center;
+  gap: 7px;
   padding: 0 18px;
   color: hsl(var(--muted-foreground));
   font-family: 'Libre Baskerville', Georgia, serif;
@@ -674,9 +677,20 @@ button { cursor: pointer; }
   transition: opacity .14s ease, transform .14s ease;
   pointer-events: none;
 }
-.reader-sticky-title.visible { display: block; opacity: 1; transform: translateY(0); }
+.reader-sticky-title.visible { display: flex; opacity: 1; transform: translateY(0); }
 .reader-head, .prose { width: min(100%, 780px); max-width: 780px; margin-inline: auto; }
+.favicon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.favicon-kicker { width: 16px; height: 16px; }
 .reader-kicker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   text-transform: uppercase;
   letter-spacing: .16em;
   font-size: 11px;
