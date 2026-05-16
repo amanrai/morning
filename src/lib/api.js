@@ -28,3 +28,5 @@ export const fetchQueued = (limit = 30) => api('/fetch-queued', { method: 'POST'
 export const health = () => api('/health')
 export const getSyncedByHour = (hours = 24) => api(`/stats/synced-by-hour?hours=${hours}`)
 export const getSyncedBySite = (limit = 500) => api(`/stats/synced-by-site?limit=${limit}`)
+export const getSites = (limit = 500) => api(`/sites?limit=${limit}`)
+export const getSiteArticles = (hostname, params = {}) => api(`/sites/${encodeURIComponent(hostname)}/articles?${new URLSearchParams(params)}`)
