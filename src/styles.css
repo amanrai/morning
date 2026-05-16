@@ -693,9 +693,9 @@ button { cursor: pointer; }
   flex-shrink: 0;
   vertical-align: middle;
 }
-.card-favicon { width: 32px; height: 32px; }
-.favicon-kicker { width: 96px; height: 96px; }
-.favicon-sticky { width: 32px; height: 32px; }
+.card-favicon { width: auto; height: 32px; }
+.favicon-kicker { width: auto; height: 96px; }
+.favicon-sticky { width: auto; height: 32px; }
 .reader-kicker {
   display: flex;
   flex-direction: column;
