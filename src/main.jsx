@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ClerkProvider, SignedIn, SignedOut, SignIn, useAuth, useClerk } from '@clerk/clerk-react'
-import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Home, Layers, LogOut, Menu, Moon, Search, Settings, Sun } from 'lucide-react'
+import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Activity, Home, Layers, LogOut, Menu, Moon, Search, Settings, Sun } from 'lucide-react'
 import { getArticle, listArticles, updateArticle, setTokenGetter } from './lib/api.js'
 import { Reader } from './Reader.jsx'
 import './styles.css'
@@ -150,6 +150,9 @@ function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle, 
             </button>
             <button className={cx('sidebar-item', active === 'search' && 'sidebar-active')} onClick={() => onSelect('search')}>
               <Search size={15} /><span>Search</span>
+            </button>
+            <button className={cx('sidebar-item', active === 'monitoring' && 'sidebar-active')} onClick={() => onSelect('monitoring')}>
+              <Activity size={15} /><span>Monitoring</span>
             </button>
           </div>
           <div className="sidebar-bottom">
@@ -359,6 +362,14 @@ const CAROUSEL_INTERVALS = [
   { label: '3 minutes', value: 180 },
   { label: '10 minutes', value: 600 },
 ]
+
+function MonitoringPanel() {
+  return (
+    <aside className="panel">
+      <div className="panel-header"><h2 className="panel-title">Monitoring</h2></div>
+    </aside>
+  )
+}
 
 function SettingsPanel({ fontScale, onFontScale, carouselInterval, onCarouselInterval, carouselMinWords, onCarouselMinWords }) {
   const [localMinWords, setLocalMinWords] = useState(carouselMinWords)
@@ -647,6 +658,8 @@ function App() {
           query={query}
           onQuery={v => setQuery(v)}
         />
+      ) : activePanel === 'monitoring' ? (
+        <MonitoringPanel />
       ) : activePanel === 'settings' ? (
         <SettingsPanel
           fontScale={fontScale}
