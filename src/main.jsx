@@ -136,25 +136,46 @@ function TokenSync() {
 }
 
 function SourcesSection({ sources, selectedHostname, onSelect, open, onToggle }) {
+  const [q, setQ] = useState('')
+  const filtered = q.trim()
+    ? sources.filter(s => s.display_name.toLowerCase().includes(q.toLowerCase()) || s.hostname.toLowerCase().includes(q.toLowerCase()))
+    : null
+
+  function SourceList({ items }) {
+    return (
+      <div className="sources-list">
+        {items.map(s => (
+          <button key={s.hostname} className={cx('source-item', selectedHostname === s.hostname && 'source-active')} onClick={() => onSelect(s)}>
+            {s.favicon_url
+              ? <img className="favicon source-favicon" src={s.favicon_url} alt="" onError={e => { e.currentTarget.style.display = 'none' }} />
+              : <div className="source-favicon-placeholder" />}
+            <span className="source-name">{s.display_name}</span>
+            <span className="source-count">{s.total_count}</span>
+          </button>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="sources-section">
-      <button className="sources-header" onClick={onToggle}>
-        <span>Sources</span>
-        {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
-      </button>
-      {open && (
-        <div className="sources-list">
-          {sources.map(s => (
-            <button key={s.hostname} className={cx('source-item', selectedHostname === s.hostname && 'source-active')} onClick={() => onSelect(s)}>
-              {s.favicon_url
-                ? <img className="favicon source-favicon" src={s.favicon_url} alt="" onError={e => { e.currentTarget.style.display = 'none' }} />
-                : <div className="source-favicon-placeholder" />}
-              <span className="source-name">{s.display_name}</span>
-              <span className="source-count">{s.total_count}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="sources-search-row">
+        <input
+          className="sources-search"
+          value={q}
+          onChange={e => setQ(e.target.value)}
+          placeholder="Sources…"
+        />
+        {!q && (
+          <button className="sources-toggle" onClick={onToggle} title={open ? 'Collapse' : 'Expand'}>
+            {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+          </button>
+        )}
+      </div>
+      {filtered
+        ? <SourceList items={filtered} />
+        : open && <SourceList items={sources} />
+      }
     </div>
   )
 }
