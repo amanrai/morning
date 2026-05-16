@@ -1,12 +1,68 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ClerkProvider, SignedIn, SignedOut, SignIn, UserButton, useAuth } from '@clerk/clerk-react'
+import { ClerkProvider, SignedIn, SignedOut, SignIn, SignUp, UserButton, useAuth } from '@clerk/clerk-react'
 import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Home, Layers, Menu, Moon, Search, Settings, Sun } from 'lucide-react'
 import { getArticle, listArticles, updateArticle, setTokenGetter } from './lib/api.js'
 import { Reader } from './Reader.jsx'
 import './styles.css'
 
 const CLERK_PK = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+
+function clerkAppearance(isDark) {
+  const bg        = isDark ? '#19130e' : '#f3ede3'
+  const card      = isDark ? '#221910' : '#faf8f3'
+  const fg        = isDark ? '#e3ddd6' : '#201508'
+  const muted     = isDark ? '#8a7d74' : '#8a7060'
+  const border    = isDark ? '#373030' : '#d9cfc3'
+  const inputBg   = isDark ? '#2a1f15' : '#faf8f3'
+  const accent    = isDark ? '#6a5fe0' : '#5546d6'
+  return {
+    variables: {
+      colorPrimary:        accent,
+      colorBackground:     bg,
+      colorInputBackground: inputBg,
+      colorInputText:      fg,
+      colorText:           fg,
+      colorTextSecondary:  muted,
+      colorNeutral:        fg,
+      borderRadius:        '0px',
+      fontFamily:          '"Inter", ui-sans-serif, system-ui, sans-serif',
+      fontSize:            '14px',
+    },
+    elements: {
+      card: { background: card, boxShadow: 'none', border: `1px solid ${border}` },
+      formButtonPrimary: { background: fg, color: bg, '&:hover': { opacity: '0.85' } },
+      socialButtonsBlockButton: { border: `1px solid ${border}`, background: card, color: fg },
+      socialButtonsBlockButtonText: { color: fg },
+      dividerLine: { background: border },
+      dividerText: { color: muted },
+      footerActionText: { color: muted },
+      footerActionLink: { color: accent },
+      identityPreviewText: { color: fg },
+      identityPreviewEditButtonIcon: { color: muted },
+    },
+  }
+}
+
+function AuthScreen() {
+  const [hash, setHash] = useState(window.location.hash)
+  const isDark = document.documentElement.dataset.theme === 'dark'
+  useEffect(() => {
+    const handler = () => setHash(window.location.hash)
+    window.addEventListener('hashchange', handler)
+    return () => window.removeEventListener('hashchange', handler)
+  }, [])
+  const isSignUp = hash.startsWith('#/sign-up')
+  return (
+    <div className="sign-in-screen">
+      <div className="sign-in-wordmark">Morning</div>
+      {isSignUp
+        ? <SignUp routing="hash" signInUrl="/" appearance={clerkAppearance(isDark)} />
+        : <SignIn routing="hash" signUpUrl="/#/sign-up" appearance={clerkAppearance(isDark)} />
+      }
+    </div>
+  )
+}
 
 function cx(...xs) { return xs.filter(Boolean).join(' ') }
 
@@ -561,14 +617,10 @@ function App() {
   )
 }
 
+const isDark = document.documentElement.dataset.theme === 'dark'
 createRoot(document.getElementById('root')).render(
-  <ClerkProvider publishableKey={CLERK_PK}>
-    <SignedOut>
-      <div className="sign-in-screen">
-        <div className="sign-in-wordmark">Morning</div>
-        <SignIn routing="hash" />
-      </div>
-    </SignedOut>
+  <ClerkProvider publishableKey={CLERK_PK} appearance={clerkAppearance(isDark)}>
+    <SignedOut><AuthScreen /></SignedOut>
     <SignedIn>
       <TokenSync />
       <App />
