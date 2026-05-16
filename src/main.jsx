@@ -392,7 +392,6 @@ function MonitoringPanel() {
 
   return (
     <aside className="panel monitoring-panel">
-      <div className="panel-header"><h2 className="panel-title">Monitoring</h2></div>
       {loading ? (
         <p className="monitoring-empty">Loading…</p>
       ) : (
