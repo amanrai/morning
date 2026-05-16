@@ -177,9 +177,6 @@ button { cursor: pointer; }
   color: hsl(var(--foreground));
   border-color: hsl(var(--border));
 }
-.sidebar-user {
-  cursor: default;
-}
 .sidebar-active {
   background: hsl(var(--secondary));
   color: hsl(var(--foreground));

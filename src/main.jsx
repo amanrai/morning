@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ClerkProvider, SignedIn, SignedOut, SignIn, UserButton, useAuth } from '@clerk/clerk-react'
-import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Home, Layers, Menu, Moon, Search, Settings, Sun } from 'lucide-react'
+import { ClerkProvider, SignedIn, SignedOut, SignIn, useAuth, useClerk } from '@clerk/clerk-react'
+import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Home, Layers, LogOut, Menu, Moon, Search, Settings, Sun } from 'lucide-react'
 import { getArticle, listArticles, updateArticle, setTokenGetter } from './lib/api.js'
 import { Reader } from './Reader.jsx'
 import './styles.css'
@@ -68,6 +68,15 @@ function AuthScreen() {
       <div className="sign-in-wordmark">Morning</div>
       <SignIn routing="hash" appearance={appearance} />
     </div>
+  )
+}
+
+function SignOutButton() {
+  const { signOut } = useClerk()
+  return (
+    <button className="sidebar-item" onClick={() => signOut({ redirectUrl: '/' })}>
+      <LogOut size={15} /><span>Log out</span>
+    </button>
   )
 }
 
@@ -151,10 +160,7 @@ function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle, 
             <button className={cx('sidebar-item', active === 'settings' && 'sidebar-active')} onClick={() => onSelect('settings')}>
               <Settings size={15} /><span>Settings</span>
             </button>
-            <div className="sidebar-user sidebar-item">
-              <UserButton afterSignOutUrl="/" appearance={currentAppearance()} />
-              <span>Account</span>
-            </div>
+            <SignOutButton />
           </div>
         </>
       )}
