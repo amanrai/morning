@@ -820,3 +820,90 @@ button { cursor: pointer; }
   .reader-head h1 { font-size: clamp(32px, 10vw, 46px); }
   .prose { font-size: calc(18px * var(--reader-font-scale, 1)); line-height: 1.78; }
 }
+
+/* Monitoring */
+.monitoring-panel { overflow-y: auto; }
+.monitoring-section {
+  padding: 0 24px 32px;
+  width: min(100%, 860px);
+  margin-inline: auto;
+}
+.monitoring-heading {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+  margin: 0 0 16px;
+}
+.monitoring-empty {
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+  padding: 0 24px;
+}
+.monitoring-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 120px;
+  padding-bottom: 20px;
+  position: relative;
+}
+.monitoring-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  position: relative;
+  cursor: default;
+}
+.monitoring-bar-fill {
+  width: 100%;
+  min-height: 1px;
+  background: hsl(var(--foreground) / .15);
+  transition: background .12s ease;
+}
+.monitoring-bar-col:hover .monitoring-bar-fill {
+  background: hsl(var(--foreground) / .4);
+}
+.monitoring-bar-label {
+  position: absolute;
+  bottom: -18px;
+  font-size: 9px;
+  color: hsl(var(--muted-foreground));
+  white-space: nowrap;
+  display: none;
+}
+.monitoring-bar-col:nth-child(6n+1) .monitoring-bar-label { display: block; }
+.monitoring-sites { display: flex; flex-direction: column; gap: 8px; }
+.monitoring-site-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 40px;
+  align-items: center;
+  gap: 12px;
+}
+.monitoring-site-name {
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.monitoring-site-bar {
+  height: 6px;
+  background: hsl(var(--border));
+  border-radius: 0;
+  overflow: hidden;
+}
+.monitoring-site-fill {
+  height: 100%;
+  background: hsl(var(--foreground) / .4);
+}
+.monitoring-site-count {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

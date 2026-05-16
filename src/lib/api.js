@@ -26,3 +26,4 @@ export const updateArticle = (id, patch) => api(`/articles/${id}`, { method: 'PA
 export const discover = () => api('/discover', { method: 'POST', body: '{}' })
 export const fetchQueued = (limit = 30) => api('/fetch-queued', { method: 'POST', body: JSON.stringify({ limit }) })
 export const health = () => api('/health')
+export const getSyncedByHour = (hours = 24) => api(`/stats/synced-by-hour?hours=${hours}`)

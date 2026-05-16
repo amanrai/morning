@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ClerkProvider, SignedIn, SignedOut, SignIn, useAuth, useClerk } from '@clerk/clerk-react'
 import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Activity, Home, Layers, LogOut, Menu, Moon, Search, Settings, Sun } from 'lucide-react'
-import { getArticle, listArticles, updateArticle, setTokenGetter } from './lib/api.js'
+import { getArticle, listArticles, updateArticle, setTokenGetter, getSyncedByHour } from './lib/api.js'
 import { Reader } from './Reader.jsx'
 import './styles.css'
 
@@ -364,9 +364,71 @@ const CAROUSEL_INTERVALS = [
 ]
 
 function MonitoringPanel() {
+  const [buckets, setBuckets] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getSyncedByHour(24)
+      .then(d => setBuckets(d.buckets))
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  const maxTotal = Math.max(1, ...buckets.map(b => b.total))
+
+  const siteTotals = {}
+  for (const b of buckets) {
+    for (const s of b.sites) {
+      siteTotals[s.site] = (siteTotals[s.site] || 0) + s.count
+    }
+  }
+  const topSites = Object.entries(siteTotals).sort((a, b) => b[1] - a[1])
+  const maxSiteCount = Math.max(1, topSites[0]?.[1] || 1)
+
+  function hourLabel(iso) {
+    const d = new Date(iso)
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+  }
+
   return (
-    <aside className="panel">
+    <aside className="panel monitoring-panel">
       <div className="panel-header"><h2 className="panel-title">Monitoring</h2></div>
+      {loading ? (
+        <p className="monitoring-empty">Loading…</p>
+      ) : (
+        <>
+          <section className="monitoring-section">
+            <h3 className="monitoring-heading">Articles synced — last 24 hours</h3>
+            <div className="monitoring-chart">
+              {buckets.map(b => (
+                <div key={b.hour} className="monitoring-bar-col" title={`${hourLabel(b.hour)}: ${b.total}`}>
+                  <div className="monitoring-bar-fill" style={{ height: `${(b.total / maxTotal) * 100}%` }} />
+                  <span className="monitoring-bar-label">{hourLabel(b.hour)}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+          <section className="monitoring-section">
+            <h3 className="monitoring-heading">By site</h3>
+            {topSites.length === 0
+              ? <p className="monitoring-empty">No data yet.</p>
+              : (
+                <div className="monitoring-sites">
+                  {topSites.map(([site, count]) => (
+                    <div key={site} className="monitoring-site-row">
+                      <span className="monitoring-site-name">{site}</span>
+                      <div className="monitoring-site-bar">
+                        <div className="monitoring-site-fill" style={{ width: `${(count / maxSiteCount) * 100}%` }} />
+                      </div>
+                      <span className="monitoring-site-count">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              )
+            }
+          </section>
+        </>
+      )}
     </aside>
   )
 }
