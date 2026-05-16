@@ -502,10 +502,20 @@ function App() {
     }
   }
 
+  const [carouselArticles, setCarouselArticles] = useState([])
+  async function refreshCarousel() {
+    const { articles: fetched } = await listArticles({ status: 'ready', sort: 'published', min_words: carouselMinWords, limit: LIMIT, offset: 0 })
+    setCarouselArticles(fetched)
+  }
+
   useEffect(() => {
     clearReader()
     refresh().catch(console.error)
   }, [query, sort, minWords])
+
+  useEffect(() => {
+    refreshCarousel().catch(console.error)
+  }, [carouselMinWords])
 
   useEffect(() => {
     if (!selectedId) return
@@ -610,7 +620,7 @@ function App() {
         />
       ) : activePanel === 'carousel' ? (
         <CarouselPanel
-          articles={articles.filter(a => (a.word_count ?? 0) >= carouselMinWords)}
+          articles={carouselArticles}
           onOpen={selectArticle}
           interval={carouselInterval}
           index={carouselIndex}
