@@ -318,18 +318,27 @@ function HomePanel({ articles, selectedId, sort, onSort, minWords, onMinWords, o
 }
 
 function SearchPanel({ articles, selectedId, query, onQuery, onOpen, onSave, hasMore, onLoadMore, loadingMore }) {
+  const [draft, setDraft] = useState(query)
+  const commit = () => onQuery(draft.trim())
+  const clear = () => { setDraft(''); onQuery('') }
   return (
     <aside className="panel">
       <div className="panel-search-bar">
         <label className="search">
           <Search size={15} />
-          <input value={query} onChange={e => onQuery(e.target.value)} placeholder="Find something to read" autoFocus />
-          {query && <button className="search-clear" onClick={() => onQuery('')} aria-label="Clear">✕</button>}
+          <input
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && commit()}
+            placeholder="Find something to read"
+            autoFocus
+          />
+          {draft && <button className="search-clear" onClick={clear} aria-label="Clear">✕</button>}
         </label>
       </div>
       {query
         ? <CardList articles={articles} selectedId={selectedId} onOpen={onOpen} onSave={onSave} emptyMessage={`No results for "${query}"`} hasMore={hasMore} onLoadMore={onLoadMore} loadingMore={loadingMore} />
-        : <p className="panel-hint">Start typing to search.</p>
+        : <p className="panel-hint">Type and press Enter to search.</p>
       }
     </aside>
   )

@@ -11,11 +11,6 @@
     "start": "NODE_ENV=production NEON_API_PORT=34567 node api/neon-server.js",
     "start:sqlite": "NODE_ENV=production node api/server.js",
     "start:neon-api": "NODE_ENV=production NEON_API_PORT=34568 node api/neon-server.js",
-    "worker:fetcher": "node workers/fetcher/index.js",
-    "worker:discover:reddit": "node workers/fetcher/discover-reddit.js",
-    "worker:extract": "node workers/fetcher/extract-queued.js",
-    "worker:fetcher:discover": "npm run worker:discover:reddit",
-    "worker:fetcher:fetch": "npm run worker:extract",
     "build": "vite build",
     "build:cf-api": "VITE_API_BASE=https://api.973858987.xyz vite build",
     "preview": "vite preview --host 0.0.0.0"
