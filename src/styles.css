@@ -823,6 +823,48 @@ button { cursor: pointer; }
 
 /* Monitoring */
 .monitoring-panel { overflow-y: auto; }
+.monitoring-tabs {
+  display: flex;
+  border-bottom: 1px solid hsl(var(--border));
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: hsl(var(--library-bg));
+}
+.monitoring-tab {
+  flex: 1;
+  height: 44px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color .12s ease, border-color .12s ease;
+}
+.monitoring-tab:hover { color: hsl(var(--foreground)); }
+.monitoring-tab-active {
+  color: hsl(var(--foreground));
+  border-bottom-color: hsl(var(--foreground));
+  font-weight: 600;
+}
+.monitoring-site-row-alltime {
+  grid-template-columns: 160px 1fr 40px 100px 100px;
+}
+.monitoring-site-date {
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .monitoring-site-row-alltime {
+    grid-template-columns: 1fr 60px 40px;
+  }
+  .monitoring-site-date { display: none; }
+}
 .monitoring-section {
   padding: 0 24px 32px;
   width: min(100%, 860px);

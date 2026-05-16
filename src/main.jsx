@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ClerkProvider, SignedIn, SignedOut, SignIn, useAuth, useClerk } from '@clerk/clerk-react'
 import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Activity, Home, Layers, LogOut, Menu, Moon, Search, Settings, Sun } from 'lucide-react'
-import { getArticle, listArticles, updateArticle, setTokenGetter, getSyncedByHour } from './lib/api.js'
+import { getArticle, listArticles, updateArticle, setTokenGetter, getSyncedByHour, getSyncedBySite } from './lib/api.js'
 import { Reader } from './Reader.jsx'
 import './styles.css'
 
@@ -363,7 +363,7 @@ const CAROUSEL_INTERVALS = [
   { label: '10 minutes', value: 600 },
 ]
 
-function MonitoringPanel() {
+function MonitoringHourly() {
   const [buckets, setBuckets] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -375,59 +375,97 @@ function MonitoringPanel() {
   }, [])
 
   const maxTotal = Math.max(1, ...buckets.map(b => b.total))
-
   const siteTotals = {}
   for (const b of buckets) {
-    for (const s of b.sites) {
-      siteTotals[s.site] = (siteTotals[s.site] || 0) + s.count
-    }
+    for (const s of b.sites) siteTotals[s.site] = (siteTotals[s.site] || 0) + s.count
   }
   const topSites = Object.entries(siteTotals).sort((a, b) => b[1] - a[1])
   const maxSiteCount = Math.max(1, topSites[0]?.[1] || 1)
 
   function hourLabel(iso) {
-    const d = new Date(iso)
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
   }
 
+  if (loading) return <p className="monitoring-empty">Loading…</p>
+  return (
+    <>
+      <section className="monitoring-section">
+        <h3 className="monitoring-heading">Articles synced — last 24 hours</h3>
+        <div className="monitoring-chart">
+          {buckets.map(b => (
+            <div key={b.hour} className="monitoring-bar-col" title={`${hourLabel(b.hour)}: ${b.total}`}>
+              <div className="monitoring-bar-fill" style={{ height: `${(b.total / maxTotal) * 100}%` }} />
+              <span className="monitoring-bar-label">{hourLabel(b.hour)}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="monitoring-section">
+        <h3 className="monitoring-heading">By site</h3>
+        {topSites.length === 0 ? <p className="monitoring-empty">No data yet.</p> : (
+          <div className="monitoring-sites">
+            {topSites.map(([site, count]) => (
+              <div key={site} className="monitoring-site-row">
+                <span className="monitoring-site-name">{site}</span>
+                <div className="monitoring-site-bar"><div className="monitoring-site-fill" style={{ width: `${(count / maxSiteCount) * 100}%` }} /></div>
+                <span className="monitoring-site-count">{count}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </>
+  )
+}
+
+function MonitoringAllTime() {
+  const [sites, setSites] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getSyncedBySite(500)
+      .then(d => setSites(d.sites))
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  const maxCount = Math.max(1, sites[0]?.synced_count || 1)
+
+  function dateLabel(iso) {
+    if (!iso) return '—'
+    return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+
+  if (loading) return <p className="monitoring-empty">Loading…</p>
+  return (
+    <section className="monitoring-section">
+      <h3 className="monitoring-heading">All time — by site</h3>
+      {sites.length === 0 ? <p className="monitoring-empty">No data yet.</p> : (
+        <div className="monitoring-sites">
+          {sites.map(s => (
+            <div key={s.site} className="monitoring-site-row monitoring-site-row-alltime">
+              <span className="monitoring-site-name">{s.site}</span>
+              <div className="monitoring-site-bar"><div className="monitoring-site-fill" style={{ width: `${(s.synced_count / maxCount) * 100}%` }} /></div>
+              <span className="monitoring-site-count">{s.synced_count}</span>
+              <span className="monitoring-site-date">{dateLabel(s.first_synced_at)}</span>
+              <span className="monitoring-site-date">{dateLabel(s.latest_synced_at)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function MonitoringPanel() {
+  const [tab, setTab] = useState('24h')
   return (
     <aside className="panel monitoring-panel">
-      {loading ? (
-        <p className="monitoring-empty">Loading…</p>
-      ) : (
-        <>
-          <section className="monitoring-section">
-            <h3 className="monitoring-heading">Articles synced — last 24 hours</h3>
-            <div className="monitoring-chart">
-              {buckets.map(b => (
-                <div key={b.hour} className="monitoring-bar-col" title={`${hourLabel(b.hour)}: ${b.total}`}>
-                  <div className="monitoring-bar-fill" style={{ height: `${(b.total / maxTotal) * 100}%` }} />
-                  <span className="monitoring-bar-label">{hourLabel(b.hour)}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-          <section className="monitoring-section">
-            <h3 className="monitoring-heading">By site</h3>
-            {topSites.length === 0
-              ? <p className="monitoring-empty">No data yet.</p>
-              : (
-                <div className="monitoring-sites">
-                  {topSites.map(([site, count]) => (
-                    <div key={site} className="monitoring-site-row">
-                      <span className="monitoring-site-name">{site}</span>
-                      <div className="monitoring-site-bar">
-                        <div className="monitoring-site-fill" style={{ width: `${(count / maxSiteCount) * 100}%` }} />
-                      </div>
-                      <span className="monitoring-site-count">{count}</span>
-                    </div>
-                  ))}
-                </div>
-              )
-            }
-          </section>
-        </>
-      )}
+      <div className="monitoring-tabs">
+        <button className={cx('monitoring-tab', tab === '24h' && 'monitoring-tab-active')} onClick={() => setTab('24h')}>Last 24h</button>
+        <button className={cx('monitoring-tab', tab === 'alltime' && 'monitoring-tab-active')} onClick={() => setTab('alltime')}>All time</button>
+      </div>
+      {tab === '24h' ? <MonitoringHourly /> : <MonitoringAllTime />}
     </aside>
   )
 }
