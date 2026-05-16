@@ -40,6 +40,13 @@ function clerkAppearance(isDark) {
       footerActionLink: { color: accent },
       identityPreviewText: { color: fg },
       identityPreviewEditButtonIcon: { color: muted },
+      userButtonPopoverCard: { background: card, boxShadow: 'none', border: `1px solid ${border}` },
+      userButtonPopoverActionButton: { color: fg },
+      userButtonPopoverActionButtonText: { color: fg },
+      userButtonPopoverActionButtonIcon: { color: muted },
+      userButtonPopoverFooter: { display: 'none' },
+      userPreviewMainIdentifier: { color: fg },
+      userPreviewSecondaryIdentifier: { color: muted },
     },
   }
 }
@@ -59,6 +66,10 @@ function AuthScreen() {
       <SignIn routing="hash" appearance={appearance} />
     </div>
   )
+}
+
+function currentAppearance() {
+  return clerkAppearance(document.documentElement.dataset.theme === 'dark')
 }
 
 function cx(...xs) { return xs.filter(Boolean).join(' ') }
@@ -138,7 +149,7 @@ function Sidebar({ active, onSelect, theme, onToggleTheme, collapsed, onToggle, 
               <Settings size={15} /><span>Settings</span>
             </button>
             <div className="sidebar-user">
-              <UserButton afterSignOutUrl="/" />
+              <UserButton afterSignOutUrl="/" appearance={currentAppearance()} />
             </div>
           </div>
         </>
